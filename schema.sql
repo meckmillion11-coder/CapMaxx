@@ -815,7 +815,9 @@ create index if not exists idx_reported_listings_status  on public.reported_list
 -- Keep this list in sync with the ADMIN_EMAILS env var used by the /admin route.
 -- These emails get full admin authorization in the database via is_admin().
 insert into public.admin_users (email, role)
-values ('owner@capmaxx.com', 'owner')
+values
+  ('owner@capmaxx.com', 'owner'),
+  ('meckmillion04@gmail.com', 'admin')
 on conflict (email) do nothing;
 
 -- Done. Re-run safely anytime.
