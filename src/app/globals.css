@@ -2,25 +2,52 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #111827;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Dark mode — class strategy (Tailwind v4 custom variant).
+   Toggled by adding `dark` to <html>. Additive only.
+   Maps the common light utility classes used across the app shell
+   to coherent dark surfaces so the Appearance toggle has a real,
+   app-wide effect without redesigning individual pages.
+   ────────────────────────────────────────────────────────────── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --background: #0f172a;
+  --foreground: #e5e7eb;
+}
+
+.dark body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.dark .bg-white { background-color: #1e293b !important; }
+.dark .bg-gray-50 { background-color: #182135 !important; }
+.dark .bg-gray-100 { background-color: #243044 !important; }
+.dark .bg-gray-200 { background-color: #2d3a52 !important; }
+
+.dark .text-gray-900 { color: #f1f5f9 !important; }
+.dark .text-gray-800 { color: #e2e8f0 !important; }
+.dark .text-gray-700 { color: #cbd5e1 !important; }
+.dark .text-gray-600 { color: #b6c2d4 !important; }
+.dark .text-gray-500 { color: #97a4ba !important; }
+.dark .text-gray-400 { color: #7e8ca3 !important; }
+
+.dark .border-gray-100 { border-color: #2a3850 !important; }
+.dark .border-gray-200 { border-color: #334155 !important; }
+.dark .border-gray-300 { border-color: #3d4d68 !important; }
