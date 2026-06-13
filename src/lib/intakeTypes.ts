@@ -160,7 +160,12 @@ export function submissionToLegacyDbRow(input: Partial<IntakeSubmission>): Recor
 }
 
 export function isMissingIntakeColumnError(message: string): boolean {
-  return /column .* does not exist/i.test(message) || message.includes("42703");
+  return (
+    /column .* does not exist/i.test(message) ||
+    message.includes("42703") ||
+    /Could not find the '.*' column of 'intake_submissions'/i.test(message) ||
+    message.includes("schema cache")
+  );
 }
 
 export function submissionToDbRow(input: Partial<IntakeSubmission>): Record<string, unknown> {
