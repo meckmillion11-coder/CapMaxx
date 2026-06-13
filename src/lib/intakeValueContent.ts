@@ -24,28 +24,73 @@ export const CAPMAXX_BENEFITS = [
   },
 ] as const;
 
-export const CAPMAXX_EXAMPLES = [
+export const CAPMAXX_SITUATIONS_TITLE = "Turn Existing Resources Into Opportunity";
+
+export const CAPMAXX_SITUATIONS_INTRO =
+  "Most companies already own valuable resources, capabilities, equipment, facilities, and expertise. CapMaxx helps make them visible so the right opportunities can find them.";
+
+export const CAPMAXX_SITUATIONS_SUMMARY =
+  "Whether you want to generate additional revenue, find more work, support overflow production, showcase specialized capabilities, or access resources without major investment — CapMaxx helps connect the right companies.";
+
+export type SituationIconName =
+  | "calendar"
+  | "season"
+  | "plant"
+  | "overflow"
+  | "support"
+  | "capability";
+
+export const CAPMAXX_SITUATIONS = [
   {
-    kind: "visual" as const,
-    label: "Manufacturing",
-    title: "Idle CNC capacity becomes billable production",
-    stat: "40% → 92%",
-    statLabel: "utilization after listing on CapMaxx",
-    body: "A precision shop runs CNC machines at less than half capacity between major orders. They list weekly open hours on CapMaxx — and nearby manufacturers book that time for overflow work.",
-    tags: ["Manufacturing Capacity", "Equipment", "Skilled Labor"],
+    icon: "calendar" as const,
+    title: "Available Every Friday",
+    lines: [
+      "Production runs Monday–Thursday.",
+      "Machine hours sit unused every Friday.",
+    ],
+    outcome: "CapMaxx makes that capacity visible to companies needing production support.",
   },
   {
-    kind: "descriptive" as const,
-    label: "Warehousing",
-    title: "Weekend pallet space that was sitting empty",
-    body: "A regional warehouse has 12,000 sq ft available every Friday through Sunday — too short for a long-term lease, perfect for a company needing surge storage during a product launch. CapMaxx makes that visible to the right buyers.",
-    tags: ["Warehouse Space", "Distribution Network"],
+    icon: "season" as const,
+    title: "Slow Season Capacity",
+    lines: [
+      "Business slows during certain months.",
+      "Equipment, facilities, and skilled workers stay available.",
+    ],
+    outcome: "CapMaxx connects those resources with new opportunities.",
   },
   {
-    kind: "descriptive" as const,
-    label: "Logistics",
-    title: "Return-trip trucks running half empty",
-    body: "A freight carrier regularly drives Dallas → Houston with a partial load, then returns nearly empty. They list return-trip capacity on CapMaxx so shippers on that lane fill the remaining space — revenue on miles that were already being driven.",
-    tags: ["Transportation Capacity", "Professional Services"],
+    icon: "plant" as const,
+    title: "New Plant, Existing Equipment",
+    lines: [
+      "You upgraded or expanded operations.",
+      "Older equipment and facilities still have value.",
+    ],
+    outcome: "CapMaxx helps others discover and use what already exists.",
+  },
+  {
+    icon: "overflow" as const,
+    title: "Overflow Production",
+    lines: [
+      "Orders exceed your available capacity.",
+      "You need support without new equipment or another facility.",
+    ],
+    outcome: "CapMaxx connects you with companies ready to help.",
+  },
+  {
+    icon: "support" as const,
+    title: "Need Production Support",
+    lines: [
+      "You need manufacturing, equipment, labor, warehousing, logistics, or services.",
+    ],
+    outcome: "CapMaxx helps you find businesses already equipped for your project.",
+  },
+  {
+    icon: "capability" as const,
+    title: "Capability Nobody Knows About",
+    lines: [
+      "Specialized equipment, certifications, expertise, or processes — with limited visibility.",
+    ],
+    outcome: "CapMaxx showcases those capabilities to companies actively searching for them.",
   },
 ] as const;
