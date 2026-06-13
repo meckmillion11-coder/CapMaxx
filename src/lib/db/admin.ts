@@ -178,43 +178,186 @@ export async function setIntakeNote(id: string, note: string) {
 }
 
 /**
- * Placeholder "Convert to company" action: creates a Pending company draft from
- * an intake submission and links the submission to it. Real onboarding (owner
- * invite, profile completion) is intentionally out of scope for now.
+ * Full conversion: company + profile + listing(s) from intake data.
  */
-export async function convertIntakeToCompany(id: string) {
+export async function convertIntakeToCompany(id: string, adminEmail?: string) {
   const supabase = getSupabaseAdminClient();
   if (!supabase) return { ok: false, error: "not configured" };
-  const { data: sub, error: subErr } = await supabase
-    .from("intake_submissions")
-    .select("*")
-    .eq("id", id)
-    .single();
+
+  const { data: sub, error: subErr } = await supabase.from("intake_submissions").select("*").eq("id", id).single();
   if (subErr || !sub) return { ok: false, error: subErr?.message ?? "not found" };
 
-  const { data: company, error } = await supabase
+  const s = sub as Record<string, unknown>;
+  const str = (v: unknown) => (v == null ? "" : String(v));
+  const arr = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
+
+  const name = str(s.company_name);
+  const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
+  const slug = `${slugBase}-${Date.now().toString(36).slice(-4)}`;
+  const caps = arr(s.resource_categories).concat(arr(s.industries_served));
+  const purpose = str(s.purpose) || "offer";
+
+  const { data: company, error: compErr } = await supabase
     .from("companies")
     .insert({
-      name: sub.company_name,
-      location: sub.location,
-      industry: sub.industry,
-      subcategory: sub.subcategory,
-      email: sub.email,
-      phone: sub.phone,
-      website: sub.website,
-      about: sub.resources_offered,
-      status: "Pending",
+      name,
+      slug,
+      location: str(s.location),
+      industry: str(s.industry),
+      subcategory: str(s.subcategory),
+      email: str(s.email),
+      phone: str(s.phone),
+      website: str(s.website),
+      about: str(s.resources_offered) || str(s.listing_description),
+      about_extended: str(s.listing_description),
+      capabilities: caps.length ? caps : arr(s.resource_categories),
+      tags: arr(s.industries_served),
+      logo_url: str(s.logo_url) || null,
+      logo_initials: (name[0] ?? "C").toUpperCase(),
+      logo_color: "bg-blue-700 text-white",
+      cover_gradient: "from-blue-600 to-blue-800",
+      status: "Approved",
       verified: false,
+      verification_status: "pending",
     })
     .select("id")
     .single();
-  if (error || !company) return { ok: false, error: error?.message ?? "insert failed" };
+
+  if (compErr || !company) return { ok: false, error: compErr?.message ?? "company insert failed" };
+  const companyId = company.id as string;
+
+  const certs = str(s.certifications)
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+
+  await supabase.from("company_profiles").insert({
+    company_id: companyId,
+    certifications: certs,
+    completion: 40,
+  });
+
+  await supabase.from("company_contacts").insert({
+    company_id: companyId,
+    name: str(s.contact_name),
+    email: str(s.email),
+    phone: str(s.phone),
+    is_primary: true,
+  });
+
+  const listingIds: string[] = [];
+  const baseListing = {
+    company_id: companyId,
+    title: str(s.listing_title) || name,
+    capability: str(s.listing_title) || str(s.industry),
+    industry: str(s.industry),
+    subcategory: str(s.subcategory),
+    location: str(s.location),
+    capacity: str(s.capacity_info) || str(s.capacity_details),
+    lead_time: str(s.lead_time),
+    moq: str(s.moq),
+    team_size: str(s.team_size),
+    equipment: str(s.equipment_details),
+    equipment_label: "Equipment",
+    category_label: str(s.industry) || "Resource",
+    certifications: certs,
+    tags: arr(s.resource_categories).length ? arr(s.resource_categories) : caps.slice(0, 6),
+    opportunity_tags: arr(s.resource_categories),
+    industries_served: arr(s.industries_served),
+    availability_status: "available",
+    status: "Approved",
+    verified: false,
+  };
+
+  const createListing = async (type: "offer" | "need") => {
+    const { data: listing } = await supabase
+      .from("listings")
+      .insert({ ...baseListing, type })
+      .select("id")
+      .single();
+    if (listing?.id) listingIds.push(String(listing.id));
+  };
+
+  if (purpose === "both") {
+    await createListing("offer");
+    await createListing("need");
+  } else {
+    await createListing(purpose === "need" ? "need" : "offer");
+  }
+
+  if (str(s.image_url)) {
+    await supabase.from("company_media").insert({
+      company_id: companyId,
+      kind: "gallery",
+      url: str(s.image_url),
+      title: str(s.listing_title) || "Primary image",
+    });
+  }
 
   await supabase
     .from("intake_submissions")
-    .update({ company_id: company.id, status: "reviewed" })
+    .update({
+      company_id: companyId,
+      status: "converted",
+      converted_at: new Date().toISOString(),
+      converted_listing_ids: listingIds,
+    })
     .eq("id", id);
-  return { ok: true, companyId: company.id as string };
+
+  await logIntakeStatus(id, "converted", adminEmail, `Converted to company ${companyId}`);
+
+  return { ok: true, companyId, listingIds };
+}
+
+export async function updateIntakeSubmission(id: string, patch: Record<string, unknown>) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return { ok: false };
+  const { error } = await supabase.from("intake_submissions").update(patch).eq("id", id);
+  return { ok: !error, error: error?.message };
+}
+
+export async function logIntakeStatus(submissionId: string, status: string, changedBy?: string, note?: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return { ok: false };
+  const { error } = await supabase.from("intake_status").insert({
+    submission_id: submissionId,
+    status,
+    changed_by: changedBy ?? null,
+    note: note ?? null,
+  });
+  return { ok: !error, error: error?.message };
+}
+
+export async function fetchIntakeFormConfig() {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return null;
+  const { data } = await supabase.from("intake_form_config").select("config").limit(1).maybeSingle();
+  return (data?.config as Record<string, unknown>) ?? null;
+}
+
+export async function saveIntakeFormConfig(config: Record<string, unknown>, updatedBy?: string) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return { ok: false };
+  const { data: existing } = await supabase.from("intake_form_config").select("id").limit(1).maybeSingle();
+  if (existing?.id) {
+    const { error } = await supabase
+      .from("intake_form_config")
+      .update({ config, updated_by: updatedBy ?? null, updated_at: new Date().toISOString() })
+      .eq("id", existing.id);
+    return { ok: !error, error: error?.message };
+  }
+  const { error } = await supabase.from("intake_form_config").insert({ config, updated_by: updatedBy ?? null });
+  return { ok: !error, error: error?.message };
+}
+
+export async function insertPublicIntakeSubmission(row: Record<string, unknown>) {
+  const supabase = getSupabaseAdminClient();
+  if (!supabase) return { ok: false, error: "not configured" };
+  const { data, error } = await supabase.from("intake_submissions").insert(row).select("id").single();
+  if (error) return { ok: false, error: error.message };
+  const id = String(data.id);
+  await logIntakeStatus(id, "new", undefined, "Public intake submission");
+  return { ok: true, id };
 }
 
 // ── Reports ───────────────────────────────────────────────────────────────────

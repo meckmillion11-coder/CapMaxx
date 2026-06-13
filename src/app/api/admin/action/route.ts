@@ -11,6 +11,8 @@ import {
   deleteIntakeSubmission,
   setIntakeNote,
   convertIntakeToCompany,
+  updateIntakeSubmission,
+  logIntakeStatus,
   setReportStatus,
   removeReportedContent,
   addAdminNote,
@@ -42,6 +44,7 @@ export async function POST(req: Request) {
     targetType?: "user" | "company" | "listing";
     targetId?: string;
     body?: string;
+    patch?: Record<string, unknown>;
   };
   try {
     body = await req.json();
@@ -76,8 +79,15 @@ export async function POST(req: Request) {
     if (!body.id) return NextResponse.json({ configured: true, error: "missing id" }, { status: 400 });
     if (action === "delete") result = await deleteIntakeSubmission(body.id);
     else if (action === "note") result = await setIntakeNote(body.id, body.note ?? "");
-    else if (action === "convert") result = await convertIntakeToCompany(body.id);
-    else result = await setIntakeStatus(body.id, body.status ?? "reviewed");
+    else if (action === "convert") result = await convertIntakeToCompany(body.id, email);
+    else if (action === "update") {
+      if (!body.patch || typeof body.patch !== "object")
+        return NextResponse.json({ configured: true, error: "missing patch" }, { status: 400 });
+      result = await updateIntakeSubmission(body.id, body.patch as Record<string, unknown>);
+    } else if (action === "approve") {
+      result = await updateIntakeSubmission(body.id, { status: "approved", approved_at: new Date().toISOString() });
+      if (result.ok) await logIntakeStatus(body.id, "approved", email);
+    } else result = await setIntakeStatus(body.id, body.status ?? "reviewed");
   } else if (entity === "report") {
     if (!body.id || !body.kind)
       return NextResponse.json({ configured: true, error: "missing id/kind" }, { status: 400 });

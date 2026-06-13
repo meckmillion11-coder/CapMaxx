@@ -4,13 +4,9 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import {
-  listingsKpis,
-  midwestBase,
-  myBusinessListings,
   type ListingStatus,
   type MyBusinessListing,
 } from "@/lib/myBusinessListings";
-import { companySlugFromName } from "@/lib/mockCompanies";
 import {
   closeListing as dbCloseListing,
   renewListing as dbRenewListing,
@@ -27,8 +23,6 @@ import ListingFilters, {
 type TypeTab = "all" | "offer" | "need";
 type StatusTab = "active" | "expiring" | "expired";
 
-const companySlug = companySlugFromName(midwestBase.company);
-
 function mbToFields(l: MyBusinessListing): FilterableFields {
   return {
     searchText: [l.title, l.industry, l.subcategory, l.location, l.listingId, ...l.tags].join(" "),
@@ -36,7 +30,11 @@ function mbToFields(l: MyBusinessListing): FilterableFields {
     subcategory: l.subcategory,
     tags: l.tags,
     location: l.location,
-    opportunityTags: [],
+    opportunityTags: l.opportunityTags ?? [],
+    capacity: l.capacity,
+    leadTime: l.leadTime,
+    availability: l.availabilityStatus,
+    certifications: l.certifications ?? [],
   };
 }
 
@@ -276,7 +274,7 @@ function ListingRowCard({
         <StatusBox listing={listing} />
         <div className="flex flex-col gap-1.5 mt-2">
           <Link
-            href={`/company/${companySlug}`}
+            href="/my-business/company-profile"
             className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded transition-colors"
           >
             <svg
@@ -371,15 +369,14 @@ function ListingsContent() {
         : null
   );
   const [liveOnly, setLiveOnly] = useState(false);
-  const [listings, setListings] = useState<MyBusinessListing[]>(myBusinessListings);
+  const [listings, setListings] = useState<MyBusinessListing[]>([]);
   const { filters, update, reset, hasActiveFilters } = useListingFilters();
 
-  // Load the current company's real listings when Supabase is configured;
-  // otherwise keep the mock seed so the dev app stays functional.
+  // Load the current company's real listings when Supabase is configured.
   useEffect(() => {
     let active = true;
     void fetchMyBusinessListings().then((data) => {
-      if (active && data) setListings(data);
+      if (active && data !== null) setListings(data);
     });
     return () => {
       active = false;
@@ -389,6 +386,8 @@ function ListingsContent() {
   const facets = useMemo(() => buildFacets(listings.map(mbToFields)), [listings]);
   const expiringCount = listings.filter((l) => l.status === "expiring").length;
   const activeCount = listings.filter((l) => l.status !== "expired").length;
+  const totalViews = listings.reduce((sum, l) => sum + l.views, 0);
+  const totalConnections = listings.reduce((sum, l) => sum + l.connections, 0);
 
   const deleteListing = (id: string) => {
     if (typeof window !== "undefined" && !window.confirm("Delete this listing? This cannot be undone.")) return;
@@ -468,31 +467,23 @@ function ListingsContent() {
 
         <div className="bg-white border border-gray-200 rounded-xl p-3.5">
           <div className="text-2xl font-bold text-gray-900 leading-none">
-            {listingsKpis.totalViews.toLocaleString()}
+            {totalViews.toLocaleString()}
           </div>
           <div className="text-xs text-gray-600 mt-1">Total Views</div>
-          <div className="text-[11px] text-green-600 font-medium mt-2">
-            {listingsKpis.viewsGrowth}
-          </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-xl p-3.5">
           <div className="text-2xl font-bold text-gray-900 leading-none">
-            {listingsKpis.totalConnections}
+            {totalConnections}
           </div>
           <div className="text-xs text-gray-600 mt-1">Total Connections</div>
-          <div className="text-[11px] text-green-600 font-medium mt-2">
-            {listingsKpis.connectionsGrowth}
-          </div>
         </div>
 
         <Link
           href="/my-messages"
           className="bg-white border border-gray-200 rounded-xl p-3.5 text-left hover:border-gray-300 hover:shadow-sm transition-all block"
         >
-          <div className="text-2xl font-bold text-gray-900 leading-none">
-            {listingsKpis.unreadMessages}
-          </div>
+          <div className="text-2xl font-bold text-gray-900 leading-none">0</div>
           <div className="text-xs text-gray-600 mt-1">Unread Messages</div>
           <div className="text-[11px] text-blue-700 font-medium mt-2">View messages →</div>
         </Link>
@@ -559,18 +550,35 @@ function ListingsContent() {
         searchPlaceholder="Search listings by title, tag, location, ID..."
         resultLabel={`${filteredListings.length} listing${filteredListings.length !== 1 ? "s" : ""}`}
         options={{
+          industries: facets.industries,
           subcategoriesByIndustry: facets.subcategoriesByIndustry,
           capabilities: facets.capabilities,
           locations: facets.locations,
-          opportunityTypes: [],
+          opportunityTypes: facets.opportunityTypes,
+          capacities: facets.capacities,
+          leadTimes: facets.leadTimes,
+          certifications: facets.certifications,
           sortOptions: mbSortOptions,
         }}
       />
 
       {/* Listing rows */}
       {filteredListings.length === 0 ? (
-        <div className="py-12 text-center text-sm text-gray-400 bg-white border border-gray-200 rounded-xl">
-          No listings match your filters.
+        <div className="py-12 text-center bg-white border border-gray-200 rounded-xl px-6">
+          {listings.length === 0 ? (
+            <>
+              <p className="text-sm text-gray-600">You haven&apos;t posted any listings yet.</p>
+              <p className="text-xs text-gray-400 mt-1 mb-4">Create an offer or need to appear in the marketplace.</p>
+              <Link
+                href="/request-form"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded transition-colors"
+              >
+                Create your first listing
+              </Link>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">No listings match your filters.</p>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">

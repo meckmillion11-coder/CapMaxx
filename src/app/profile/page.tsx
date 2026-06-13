@@ -2,16 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { savePreferences } from "@/lib/db/profiles";
+import { fetchMyProfile, type MyProfileData } from "@/lib/db/reads";
 
 const THEME_KEY = "capmaxx-theme";
 
 type ProfileTab = "account" | "membership" | "notifications" | "appearance" | "users";
 
-const companyUsers = [
-  { id: "1", name: "James Hartley", email: "james@midwestprecision.com", role: "Owner" as const },
-  { id: "2", name: "Sarah Kim", email: "sarah@midwestprecision.com", role: "Manager" as const },
-  { id: "3", name: "John Smith", email: "john@midwestprecision.com", role: "Employee" as const },
-];
+type Role = "Owner" | "Manager" | "Employee";
+
+interface CompanyUser {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+}
 
 const emailNotifications = [
   "New Message",
@@ -23,16 +27,14 @@ const emailNotifications = [
   "Weekly Activity Summary",
 ];
 
-type Role = "Owner" | "Manager" | "Employee";
-
 export default function ProfilePage() {
   const [tab, setTab] = useState<ProfileTab>("account");
-  // Start "light" on both server and first client render to avoid a hydration
-  // mismatch; the persisted choice is read and applied in an effect below.
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("Employee");
-  const [users, setUsers] = useState(companyUsers);
+  const [users, setUsers] = useState<CompanyUser[]>([]);
+  const [profile, setProfile] = useState<MyProfileData | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   const tabDef: { id: ProfileTab; label: string }[] = [
     { id: "account", label: "Account" },
@@ -42,10 +44,45 @@ export default function ProfilePage() {
     { id: "users", label: "Company Users" },
   ];
 
-  const profileCompletion = 85;
+  const profileCompletion = profile?.profileCompletion ?? 0;
+  const displayName =
+    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ") ||
+    profile?.email?.split("@")[0] ||
+    "Your account";
+  const avatarLetter = (displayName[0] ?? "Y").toUpperCase();
+  const subtitle = [
+    profile?.email,
+    profile?.role && profile?.companyName
+      ? `${profile.role}, ${profile.companyName}`
+      : profile?.role || profile?.companyName,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
-  // Read persisted theme on mount and apply it to <html>. Runs client-only,
-  // so server markup stays deterministic and reloads keep the chosen theme.
+  useEffect(() => {
+    let active = true;
+    void fetchMyProfile().then((data) => {
+      if (!active) return;
+      setProfile(data);
+      if (data) {
+        const ownerName = [data.firstName, data.lastName].filter(Boolean).join(" ") || data.email;
+        setUsers([
+          {
+            id: "owner",
+            name: ownerName,
+            email: data.email,
+            role: (data.role as Role) || "Owner",
+          },
+        ]);
+      }
+      setLoaded(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Read persisted theme on mount and apply it to <html>.
   useEffect(() => {
     const stored = localStorage.getItem(THEME_KEY);
     const initial: "light" | "dark" = stored === "dark" ? "dark" : "light";
@@ -91,12 +128,16 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-4">
+    <div className="max-w-screen-xl mx-auto px-4 py-4 min-w-0">
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-base">J</div>
-        <div>
-          <h1 className="text-base font-bold text-gray-900 leading-tight">James Hartley</h1>
-          <p className="text-xs text-gray-400">james@midwestprecision.com · Owner, Midwest Precision Parts Co.</p>
+        <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-base">
+          {avatarLetter}
+        </div>
+        <div className="min-w-0">
+          <h1 className="text-base font-bold text-gray-900 leading-tight">
+            {loaded ? displayName : "Loading profile…"}
+          </h1>
+          <p className="text-xs text-gray-400 truncate">{loaded ? subtitle || "Complete your account details below." : ""}</p>
         </div>
       </div>
 
@@ -117,7 +158,12 @@ export default function ProfilePage() {
           <div className="bg-white border border-gray-200 rounded p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-3">Personal Information</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[["First Name", "James"], ["Last Name", "Hartley"], ["Email", "james@midwestprecision.com"], ["Phone Number", "+1 (312) 555-0182"]].map(([lbl, val]) => (
+              {[
+                ["First Name", profile?.firstName ?? ""],
+                ["Last Name", profile?.lastName ?? ""],
+                ["Email", profile?.email ?? ""],
+                ["Phone Number", profile?.phone ?? ""],
+              ].map(([lbl, val]) => (
                 <div key={lbl}>
                   <label className="block text-xs text-gray-400 mb-1">{lbl}</label>
                   <input defaultValue={val} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" />
@@ -159,7 +205,9 @@ export default function ProfilePage() {
             <div>
               <div className="text-xs text-gray-400 mb-0.5">Membership Type</div>
               <div className="text-base font-bold text-gray-900">Free Member</div>
-              <div className="text-xs text-gray-500 mt-0.5">Joined Jan 2026</div>
+              <div className="text-xs text-gray-500 mt-0.5">
+                {profile?.joinedAt ? `Joined ${profile.joinedAt}` : "Member since signup"}
+              </div>
             </div>
             <span className="text-xs bg-green-50 text-green-700 border border-green-200 font-medium px-2.5 py-1 rounded-full shrink-0">Active</span>
           </div>
@@ -177,10 +225,10 @@ export default function ProfilePage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Active Listings", value: "4" },
-              { label: "Connections", value: "12" },
-              { label: "Messages", value: "8" },
-              { label: "Profile Views", value: "47" },
+              { label: "Active Listings", value: String(profile?.activeListings ?? 0) },
+              { label: "Connections", value: String(profile?.connections ?? 0) },
+              { label: "Messages", value: String(profile?.messages ?? 0) },
+              { label: "Profile Views", value: String(profile?.profileViews ?? 0) },
             ].map((stat) => (
               <div key={stat.label} className="bg-white border border-gray-200 rounded p-4 text-center">
                 <div className="text-2xl font-bold text-gray-900">{stat.value}</div>

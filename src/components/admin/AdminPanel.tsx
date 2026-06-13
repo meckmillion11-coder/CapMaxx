@@ -28,13 +28,10 @@ import {
   subscribeSubmissions,
   getSubmissions,
   getServerSubmissions,
-  updateSubmissionStatus,
-  updateSubmissionNote,
-  deleteSubmission,
   replaceSubmissions,
   mapDbRowToSubmission,
-  type SubmissionStatus,
 } from "@/lib/intakeSubmissions";
+import IntakeSubmissionsAdmin from "./IntakeSubmissionsAdmin";
 
 // Format an ISO timestamp the way the mock data presents "joined" dates.
 function fmtDate(value: unknown): string {
@@ -195,20 +192,6 @@ function ReportBadge({ status }: { status: ReportStatus }) {
     removed: "bg-red-50 text-red-700 border-red-200",
   };
   const labels: Record<ReportStatus, string> = { pending: "Pending", reviewed: "Reviewed", removed: "Removed" };
-  return (
-    <span className={`inline-block text-[11px] font-medium px-1.5 py-0.5 rounded border ${styles[status]}`}>
-      {labels[status]}
-    </span>
-  );
-}
-
-function SubmissionBadge({ status }: { status: SubmissionStatus }) {
-  const styles: Record<SubmissionStatus, string> = {
-    new: "bg-blue-50 text-blue-700 border-blue-200",
-    reviewed: "bg-green-50 text-green-700 border-green-200",
-    archived: "bg-gray-100 text-gray-500 border-gray-200",
-  };
-  const labels: Record<SubmissionStatus, string> = { new: "New", reviewed: "Reviewed", archived: "Archived" };
   return (
     <span className={`inline-block text-[11px] font-medium px-1.5 py-0.5 rounded border ${styles[status]}`}>
       {labels[status]}
@@ -611,30 +594,6 @@ export default function AdminPanel({ adminEmail }: { adminEmail: string }) {
       setListings((p) => p.map((l) => (l.id === report.targetId ? { ...l, status: "Suspended" } : l)));
     }
     if (supabaseLive) void postAdminAction({ entity: "report", action: "remove", id: report.id, kind: report.kind });
-  };
-
-  const setSubStatus = (id: string, status: SubmissionStatus) => {
-    updateSubmissionStatus(id, status);
-    if (supabaseLive) void postAdminAction({ entity: "intake", action: "status", id, status });
-  };
-  const removeSub = (id: string) => {
-    deleteSubmission(id);
-    if (supabaseLive) void postAdminAction({ entity: "intake", action: "delete", id });
-  };
-  const saveSubNote = (id: string, note: string) => {
-    updateSubmissionNote(id, note);
-    setActionMsg("Note saved.");
-    if (supabaseLive) void postAdminAction({ entity: "intake", action: "note", id, note });
-  };
-  const convertSub = (id: string) => {
-    if (supabaseLive) {
-      void postAdminAction({ entity: "intake", action: "convert", id }).then((r) => {
-        setActionMsg(r?.ok ? "Created a Pending company draft from this submission." : "Convert failed.");
-      });
-      updateSubmissionStatus(id, "reviewed");
-    } else {
-      setActionMsg("Convert to company — coming soon (connect Supabase to enable drafts).");
-    }
   };
 
   const addNote = () => {
@@ -1176,112 +1135,11 @@ export default function AdminPanel({ adminEmail }: { adminEmail: string }) {
 
       {/* ── INTAKE SUBMISSIONS ── */}
       {tab === "submissions" && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-gray-900">Intake Submissions ({submissions.length})</h2>
-          <p className="text-[11px] text-gray-400 -mt-1">
-            Submitted through the public intake form at <span className="font-mono">/intake</span>.
-          </p>
-          <div className="bg-white border border-gray-200 rounded overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className={thCls}>Company</th>
-                  <th className={thCls}>Contact</th>
-                  <th className={thCls}>Industry</th>
-                  <th className={thCls}>Resources</th>
-                  <th className={thCls}>Admin Note</th>
-                  <th className={thCls}>Submitted</th>
-                  <th className={thCls}>Status</th>
-                  <th className={`${thCls} text-right`}>Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {submissions.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50/60 align-top">
-                    <td className={`${tdCls} font-medium text-gray-900`}>
-                      {s.companyName}
-                      <div className="text-[11px] text-gray-400 font-normal">{s.location || "—"}</div>
-                    </td>
-                    <td className={tdCls}>
-                      {s.contactName}
-                      <div className="text-[11px] text-gray-400">{s.email}</div>
-                      {s.phone && <div className="text-[11px] text-gray-400">{s.phone}</div>}
-                      <div className="text-[11px] text-gray-400">Prefers: {s.preferredContact}</div>
-                    </td>
-                    <td className={tdCls}>
-                      {s.industry || "—"}
-                      {s.subcategory && <div className="text-[11px] text-gray-400">{s.subcategory}</div>}
-                    </td>
-                    <td className={`${tdCls} max-w-[240px]`}>
-                      {s.resourcesOffered && (
-                        <div className="text-[12px]"><span className="text-green-600 font-medium">Has: </span>{s.resourcesOffered}</div>
-                      )}
-                      {s.resourcesSought && (
-                        <div className="text-[12px] mt-1"><span className="text-orange-600 font-medium">Seeks: </span>{s.resourcesSought}</div>
-                      )}
-                    </td>
-                    <td className={`${tdCls} max-w-[200px]`}>
-                      <textarea
-                        defaultValue={s.adminNote ?? ""}
-                        placeholder="Add note…"
-                        onBlur={(e) => {
-                          if (e.target.value !== (s.adminNote ?? "")) saveSubNote(s.id, e.target.value);
-                        }}
-                        className="w-full text-[12px] border border-gray-200 rounded px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        rows={2}
-                      />
-                    </td>
-                    <td className={`${tdCls} text-gray-400 whitespace-nowrap`}>
-                      {new Date(s.submittedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                    </td>
-                    <td className={tdCls}><SubmissionBadge status={s.status} /></td>
-                    <td className={`${tdCls} text-right whitespace-nowrap`}>
-                      <div className="inline-flex flex-col items-end gap-1">
-                        <div className="inline-flex gap-1">
-                          <button
-                            onClick={() => setSubStatus(s.id, "reviewed")}
-                            disabled={s.status === "reviewed"}
-                            className={`${actionBtn} border-green-300 text-green-700 hover:bg-green-50`}
-                          >
-                            Reviewed
-                          </button>
-                          <button
-                            onClick={() => setSubStatus(s.id, "archived")}
-                            disabled={s.status === "archived"}
-                            className={`${actionBtn} border-gray-300 text-gray-600 hover:bg-gray-50`}
-                          >
-                            Archive
-                          </button>
-                        </div>
-                        <div className="inline-flex gap-1">
-                          <button
-                            onClick={() => convertSub(s.id)}
-                            className={`${actionBtn} border-blue-300 text-blue-700 hover:bg-blue-50`}
-                          >
-                            Convert to company
-                          </button>
-                          <button
-                            onClick={() => removeSub(s.id)}
-                            className={`${actionBtn} border-red-300 text-red-700 hover:bg-red-50`}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {submissions.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="px-3 py-6 text-center text-[13px] text-gray-400">
-                      No submissions yet. Try the public form at <span className="font-mono">/intake</span>.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <IntakeSubmissionsAdmin
+          submissions={submissions}
+          supabaseLive={supabaseLive}
+          onMessage={setActionMsg}
+        />
       )}
 
       {/* ── MESSAGES METADATA ── */}

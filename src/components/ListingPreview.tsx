@@ -31,8 +31,8 @@ export default function ListingPreview() {
                 <p className="text-xs font-semibold uppercase tracking-widest text-blue-200 mb-1">
                   Sample Listing
                 </p>
-                <h3 className="text-xl font-bold">Midwest Precision Parts Co.</h3>
-                <p className="text-blue-200 text-sm mt-1">Manufacturing · Chicago, IL</p>
+                <h3 className="text-xl font-bold">Sample Manufacturing Co.</h3>
+                <p className="text-blue-200 text-sm mt-1">Manufacturing · Your City, ST</p>
               </div>
               <div className="flex flex-col gap-2 text-right">
                 <span className="inline-block bg-white text-blue-700 text-xs font-bold px-3 py-1 rounded-full">

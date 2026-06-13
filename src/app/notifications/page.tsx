@@ -1,24 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { fetchMyNotifications, type NotificationItem } from "@/lib/db/reads";
 
 type ActivityType = "view" | "message" | "saved" | "expiring" | "connection";
-
-type Activity = {
-  id: string;
-  type: ActivityType;
-  text: string;
-  time: string;
-  unread: boolean;
-  href?: string;
-};
-
-// Mirrors the items surfaced in the notification bell dropdown.
-const activity: Activity[] = [
-  { id: "1", type: "view", text: "BlueLine Transport viewed your listing", time: "5m ago", unread: true, href: "/my-business/listings" },
-  { id: "2", type: "message", text: "Summit Cold Storage sent a message", time: "1h ago", unread: true, href: "/my-messages" },
-  { id: "3", type: "saved", text: "3 companies saved your listing", time: "3h ago", unread: true, href: "/my-business/listings" },
-  { id: "4", type: "expiring", text: "Listing expires in 14 days", time: "1d ago", unread: false, href: "/my-business/listings" },
-  { id: "5", type: "connection", text: "New connection request from GreenLeaf Bakery", time: "2d ago", unread: false, href: "/my-network" },
-];
 
 function ActivityIcon({ type }: { type: ActivityType }) {
   const base = "w-4 h-4";
@@ -66,8 +52,30 @@ const iconColor: Record<ActivityType, string> = {
   connection: "bg-green-50 text-green-600",
 };
 
+function asActivityType(value: string): ActivityType {
+  if (value === "message" || value === "saved" || value === "expiring" || value === "connection") {
+    return value;
+  }
+  return "view";
+}
+
 export default function NotificationsPage() {
-  const unreadCount = activity.filter((a) => a.unread).length;
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void fetchMyNotifications().then((data) => {
+      if (!active) return;
+      setItems(data ?? []);
+      setLoaded(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const unreadCount = items.filter((a) => a.unread).length;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -84,27 +92,40 @@ export default function NotificationsPage() {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        {activity.map((item) => {
-          const row = (
-            <div className="flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${iconColor[item.type]}`}>
-                <ActivityIcon type={item.type} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-[13px] leading-snug ${item.unread ? "text-gray-900 font-medium" : "text-gray-600"}`}>{item.text}</p>
-                <p className="text-[11px] text-gray-400 mt-0.5">{item.time}</p>
-              </div>
-              {item.unread && <span className="mt-1.5 w-2 h-2 rounded-full bg-blue-600 shrink-0" />}
-            </div>
-          );
-          return item.href ? (
-            <Link key={item.id} href={item.href} className="block">
-              {row}
+        {!loaded ? (
+          <div className="px-4 py-12 text-center text-sm text-gray-400">Loading notifications…</div>
+        ) : items.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <p className="text-sm font-medium text-gray-800">No notifications yet</p>
+            <p className="text-xs text-gray-500 mt-1">
+              You&apos;ll see updates here when businesses interact with your listings or send messages.
+            </p>
+            <Link href="/my-business" className="inline-block mt-4 text-xs font-medium text-blue-700 hover:underline">
+              Go to My Business →
             </Link>
-          ) : (
-            <div key={item.id}>{row}</div>
-          );
-        })}
+          </div>
+        ) : (
+          items.map((item) => {
+            const type = asActivityType(item.type);
+            return (
+              <div
+                key={item.id}
+                className="flex items-start gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors"
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${iconColor[type]}`}>
+                  <ActivityIcon type={type} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[13px] leading-snug ${item.unread ? "text-gray-900 font-medium" : "text-gray-600"}`}>
+                    {item.text}
+                  </p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">{item.time}</p>
+                </div>
+                {item.unread && <span className="mt-1.5 w-2 h-2 rounded-full bg-blue-600 shrink-0" />}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

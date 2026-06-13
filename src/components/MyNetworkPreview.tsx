@@ -3,7 +3,6 @@ import Link from "next/link";
 const networkSections = [
   {
     title: "Following Companies",
-    count: "24",
     description: "Companies you're tracking for future opportunities.",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -14,7 +13,6 @@ const networkSections = [
   },
   {
     title: "Saved Companies",
-    count: "11",
     description: "Businesses you've bookmarked to revisit.",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,7 +22,6 @@ const networkSections = [
   },
   {
     title: "Saved Listings",
-    count: "18",
     description: "Listings that match what you're looking for.",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -34,7 +31,6 @@ const networkSections = [
   },
   {
     title: "Connections",
-    count: "7",
     description: "Active business relationships established through CapMaxx.",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,14 +63,9 @@ export default function MyNetworkPreview() {
                 {section.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {section.title}
-                  </h3>
-                  <span className="text-lg font-bold text-blue-700">
-                    {section.count}
-                  </span>
-                </div>
+                <h3 className="text-base font-semibold text-gray-900 mb-1">
+                  {section.title}
+                </h3>
                 <p className="text-sm text-gray-500">{section.description}</p>
               </div>
             </div>

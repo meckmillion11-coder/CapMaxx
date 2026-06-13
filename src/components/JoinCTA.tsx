@@ -16,7 +16,7 @@ export default function JoinCTA() {
           how the platform grows.
         </p>
         <Link
-          href="/signup"
+          href="/founding-companies"
           className="inline-block px-10 py-4 text-lg font-bold bg-white text-blue-700 hover:bg-blue-50 rounded-md transition-colors shadow-sm"
         >
           Join Founding Companies

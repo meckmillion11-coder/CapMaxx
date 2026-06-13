@@ -38,179 +38,6 @@ interface Company {
   photoLabel: string;
 }
 
-const companies: Company[] = [
-  {
-    id: "1", type: "offer", name: "Summit Cold Storage LLC", location: "Denver, CO, USA",
-    industry: "Logistics", subcategory: "Cold Storage", categoryLabel: "Logistics",
-    summary: "Frozen Foods • Dairy • Meat & Poultry • Pharmaceutical Storage",
-    capabilities: ["Cold Storage", "Frozen Storage", "Distribution", "Cross Docking"],
-    industriesServed: ["Food Service", "Retail", "E-commerce", "National"],
-    certifications: ["FDA Registered", "SQF Level 2", "USDA"],
-    equipment: "Blast Freezers • Refrigerated Dock Doors • Temperature Monitoring • Cross-Dock",
-    equipmentLabel: "Services",
-    opportunityTags: ["Warehousing", "Distribution", "Cold Chain"],
-    verified: true, tabs: ["following", "connections"],
-    logoBg: "bg-slate-800 text-white", logoIcon: "⛰️",
-    photoBg: "from-slate-400 via-slate-500 to-slate-600", photoLabel: "Cold Storage Facility",
-  },
-  {
-    id: "2", type: "offer", name: "BlueLine Transport Inc.", location: "Atlanta, GA, USA",
-    industry: "Logistics", subcategory: "Freight & Transportation", categoryLabel: "Transportation",
-    summary: "Dry Van Freight • Flatbed Hauling • LTL • Expedited Delivery",
-    capabilities: ["Freight", "Truckload (TL)", "LTL", "Expedited Shipping"],
-    industriesServed: ["National", "Regional", "Industrial", "Construction"],
-    certifications: ["FMCSA", "DOT", "SmartWay"],
-    equipment: "Dry Van Fleet • Flatbed Trailers • GPS Tracking • 24/7 Dispatch",
-    equipmentLabel: "Coverage",
-    opportunityTags: ["Distribution", "National Coverage"],
-    verified: true, tabs: ["following", "connections"],
-    logoBg: "bg-blue-700 text-white", logoIcon: "BL",
-    photoBg: "from-sky-300 via-sky-400 to-blue-600", photoLabel: "Fleet & Transport",
-  },
-  {
-    id: "3", type: "offer", name: "GreenLeaf Bakery Co.", location: "Portland, OR, USA",
-    industry: "Food & Beverage", subcategory: "Bakery", categoryLabel: "Food Production",
-    summary: "Artisan Bread • Cookies & Biscuits • Muffins • Private Label Products",
-    capabilities: ["Bread", "Cookies", "Muffins", "Croissants", "Private Label Baking"],
-    industriesServed: ["Retail", "Food Service", "E-commerce", "Grocery"],
-    certifications: ["FDA Registered", "SQF", "Organic Certified"],
-    equipment: "Commercial Ovens • Mixers • Packaging Lines • Gluten-Free Line",
-    opportunityTags: ["Private Label", "Contract Manufacturing"],
-    verified: true, tabs: ["following"],
-    logoBg: "bg-green-700 text-white", logoIcon: "🌿",
-    photoBg: "from-amber-300 via-orange-400 to-amber-500", photoLabel: "Artisan Bakery",
-  },
-  {
-    id: "4", type: "offer", name: "Apex Fabrication Group", location: "Detroit, MI, USA",
-    industry: "Manufacturing", subcategory: "Metal Fabrication", categoryLabel: "Manufacturing",
-    summary: "Sheet Metal Parts • Structural Steel • Custom Enclosures • Weldments",
-    capabilities: ["CNC Machining", "Laser Cutting", "Sheet Metal", "Welding", "Powder Coating"],
-    industriesServed: ["Automotive", "Industrial", "Construction", "Aerospace"],
-    certifications: ["AWS D1.1", "ISO 9001:2015"],
-    equipment: "Fiber Laser (6kW) • Press Brakes • MIG/TIG Welding • Powder Coating Line",
-    opportunityTags: ["Contract Manufacturing", "Overflow Production"],
-    verified: true, tabs: ["following", "connections"],
-    logoBg: "bg-red-700 text-white", logoIcon: "⚙️",
-    photoBg: "from-orange-500 via-red-500 to-red-700", photoLabel: "Metal Fabrication",
-  },
-  {
-    id: "5", type: "need", name: "Northfield Poultry Supply", location: "Marshall, MN, USA",
-    industry: "Food & Beverage", subcategory: "Poultry", categoryLabel: "Food Production",
-    summary: "Whole Chicken • Turkey Products • Cut & Pack • Value-Added Poultry",
-    capabilities: ["Chicken", "Turkey", "Poultry Processing", "Packaging", "Distribution"],
-    industriesServed: ["Food Service", "Retail", "Grocery", "National"],
-    certifications: ["USDA", "HACCP"],
-    equipment: "USDA processing line • Vacuum packaging • Blast freezing • Cold storage",
-    equipmentLabel: "Requirements",
-    opportunityTags: ["Contract Manufacturing", "New Suppliers"],
-    verified: true, tabs: ["following"],
-    logoBg: "bg-gray-800 text-white", logoIcon: "🐓",
-    photoBg: "from-yellow-300 via-amber-400 to-yellow-500", photoLabel: "Poultry Processing",
-  },
-  {
-    id: "6", type: "offer", name: "Frostway Foods", location: "Kansas City, MO, USA",
-    industry: "Food & Beverage", subcategory: "Frozen Foods", categoryLabel: "Food Production",
-    summary: "Frozen Vegetables • IQF Fruits • Food Service Packs • Retail Packaging",
-    capabilities: ["Frozen Vegetables", "Frozen Fruits", "IQF Products", "Food Service"],
-    industriesServed: ["Retail", "Food Service", "Grocery", "National"],
-    certifications: ["FDA Registered", "SQF Level 2"],
-    equipment: "IQF Freezers • Packaging Lines • Cold Storage • QA Lab",
-    opportunityTags: ["Private Label", "Contract Manufacturing"],
-    verified: true, tabs: ["following"],
-    logoBg: "bg-blue-600 text-white", logoIcon: "❄️",
-    photoBg: "from-emerald-300 via-teal-400 to-teal-600", photoLabel: "Frozen Foods",
-  },
-  {
-    id: "7", type: "offer", name: "PackRite Solutions", location: "Chicago, IL, USA",
-    industry: "Packaging", subcategory: "Custom Packaging", categoryLabel: "Packaging",
-    summary: "Corrugated Boxes • Retail Displays • Custom Inserts • Shipping Cartons",
-    capabilities: ["Corrugated Boxes", "Custom Packaging", "Shrink Wrap", "Labels"],
-    industriesServed: ["E-commerce", "Retail", "Food Service", "Industrial"],
-    certifications: ["FSC", "ISO 14001"],
-    equipment: "Die-Cutters • Flexo Printing • CAD Design • Prototype Shop",
-    opportunityTags: ["Private Label", "Contract Manufacturing"],
-    verified: true, tabs: ["following", "saved-companies"],
-    logoBg: "bg-amber-500 text-white", logoIcon: "📦",
-    photoBg: "from-amber-300 via-orange-400 to-amber-500", photoLabel: "Custom Packaging",
-  },
-  {
-    id: "8", type: "offer", name: "Voltex Electrical", location: "Houston, TX, USA",
-    industry: "Electrical & Electronic", subcategory: "Industrial Electrical", categoryLabel: "Electronics",
-    summary: "Control Panels • Wiring Harnesses • Electrical Assembly • Testing",
-    capabilities: ["Control Panels", "Wiring Harness", "Electrical Assembly", "Testing"],
-    industriesServed: ["Industrial", "Construction", "Automotive", "Energy"],
-    certifications: ["UL Listed", "ISO 9001:2015"],
-    equipment: "Panel Build Stations • Harness Assembly • Functional Test • UL Shop",
-    opportunityTags: ["Contract Manufacturing", "Overflow Production"],
-    verified: true, tabs: ["following"],
-    logoBg: "bg-yellow-500 text-gray-900", logoIcon: "⚡",
-    photoBg: "from-yellow-300 via-orange-400 to-orange-500", photoLabel: "Industrial Electrical",
-  },
-  {
-    id: "9", type: "offer", name: "TechAssembly Solutions", location: "Austin, TX, USA",
-    industry: "Electronics", subcategory: "PCB Assembly", categoryLabel: "Electronics",
-    summary: "PCB Assemblies • Box Builds • Cable Harnesses • Test Fixtures",
-    capabilities: ["PCB Assembly", "Box Build", "SMT", "Testing & Inspection", "NPI"],
-    industriesServed: ["Medical", "Industrial", "Automotive", "Electronics"],
-    certifications: ["IPC-A-610", "ISO 9001:2015", "UL Listed"],
-    equipment: "SMT Lines • AOI Inspection • X-Ray • Functional Test Stations",
-    opportunityTags: ["Contract Manufacturing", "Prototype Work"],
-    verified: true, tabs: ["saved-companies"],
-    logoBg: "bg-orange-600 text-white", logoIcon: "🔌",
-    photoBg: "from-orange-300 via-orange-400 to-red-500", photoLabel: "Electronics Mfg",
-  },
-  {
-    id: "10", type: "offer", name: "Hartwell Injection Molding", location: "Cincinnati, OH, USA",
-    industry: "Plastics", subcategory: "Injection Molding", categoryLabel: "Manufacturing",
-    summary: "ABS Components • PP Parts • Custom Tooling • High-Volume Runs",
-    capabilities: ["Injection Molding", "Tooling Design", "ABS Parts", "Polypropylene"],
-    industriesServed: ["Automotive", "Industrial", "Medical", "Consumer Goods"],
-    certifications: ["ISO 9001:2015"],
-    equipment: "Injection Presses (50–500 ton) • Tool Design • Secondary Ops • QA Lab",
-    opportunityTags: ["Contract Manufacturing", "Overflow Production"],
-    verified: false, tabs: ["saved-companies"],
-    logoBg: "bg-yellow-600 text-white", logoIcon: "🏭",
-    photoBg: "from-yellow-200 via-yellow-400 to-amber-500", photoLabel: "Plastic Molding",
-  },
-  {
-    id: "11", type: "offer", name: "Coastal Food Co-Pack", location: "Seattle, WA, USA",
-    industry: "Food & Beverage", subcategory: "Co-Packing", categoryLabel: "Food Production",
-    summary: "Dry Goods • Snacks • Beverages • Private Label Foods",
-    capabilities: ["Co-Packing", "Private Label", "Filling & Sealing", "Dry Goods"],
-    industriesServed: ["Retail", "Food Service", "E-commerce", "Grocery"],
-    certifications: ["SQF", "FSSC 22000", "Organic Certified"],
-    equipment: "Filling Lines • Sealing Equipment • Labeling • QA Lab",
-    opportunityTags: ["Private Label", "Contract Manufacturing"],
-    verified: true, tabs: ["saved-companies"],
-    logoBg: "bg-teal-600 text-white", logoIcon: "🌊",
-    photoBg: "from-teal-300 via-teal-500 to-teal-700", photoLabel: "Food Co-Packing",
-  },
-  {
-    id: "12", type: "offer", name: "Midwest Precision Parts", location: "Chicago, IL, USA",
-    industry: "Manufacturing", subcategory: "CNC Machining", categoryLabel: "Manufacturing",
-    summary: "Aluminum Brackets • Steel Fittings • Aerospace Components • Custom Parts",
-    capabilities: ["CNC Machining", "Precision Parts", "5-Axis", "Prototype"],
-    industriesServed: ["Aerospace", "Automotive", "Medical", "Industrial"],
-    certifications: ["ISO 9001:2015", "AS9100D", "ITAR Registered"],
-    equipment: "HAAS CNC Mills (3 & 4 Axis) • CNC Lathes • 5-Axis Machining Center",
-    opportunityTags: ["Overflow Production", "Contract Manufacturing", "Prototype Work"],
-    verified: true, tabs: ["connections"],
-    logoBg: "bg-blue-800 text-white", logoIcon: "⚙️",
-    photoBg: "from-slate-300 via-slate-400 to-slate-600", photoLabel: "CNC Machining",
-  },
-];
-
-const savedListings = [
-  { id: "1", company: "Summit Cold Storage",    title: "Refrigerated Warehousing & Distribution",  industry: "Logistics",     type: "offer" as const, saved: "Mar 30", status: "active"  as const },
-  { id: "2", company: "TechAssembly Solutions", title: "PCB Assembly, Electronics Manufacturing",   industry: "Electronics",   type: "offer" as const, saved: "Mar 28", status: "active"  as const },
-  { id: "3", company: "NexGen Devices",         title: "Need PCB Assembly & Testing Capacity",      industry: "Electronics",   type: "need" as const,  saved: "Mar 26", status: "active"  as const },
-  { id: "4", company: "GreenLeaf Bakery",       title: "Custom Corrugated Packaging & Design",      industry: "Packaging",     type: "offer" as const, saved: "Mar 24", status: "active"  as const },
-  { id: "5", company: "Apex Fabrication",       title: "Sheet Metal Fabrication & Welding",         industry: "Manufacturing", type: "offer" as const, saved: "Mar 20", status: "active"  as const },
-  { id: "6", company: "FreshBake Distribution", title: "Private Label Bakery – Bread & Rolls",      industry: "Food & Bev",    type: "offer" as const, saved: "Mar 15", status: "active"  as const },
-  { id: "7", company: "OldCo Manufacturing",    title: "Steel Tube Bending – 2\" max diameter",     industry: "Manufacturing", type: "offer" as const, saved: "Jan 10", status: "expired" as const },
-  { id: "8", company: "Westport Logistics",     title: "Flatbed Hauling – West Coast Routes",       industry: "Freight",       type: "offer" as const, saved: "Dec 15", status: "expired" as const },
-];
-
 function companyToFields(c: Company): FilterableFields {
   return {
     searchText: [c.name, c.industry, c.subcategory, c.summary, ...c.capabilities].join(" "),
@@ -300,7 +127,7 @@ function CompanyCard({ c }: { c: Company }) {
             <span className="text-[13px] font-bold text-gray-900 truncate">{c.name}</span>
             {c.verified && <VerifiedBadge />}
           </div>
-          <div className="text-[11px] text-gray-500">{c.industry} › {c.subcategory}</div>
+          <div className="text-[11px] text-gray-500 truncate">{c.industry} › {c.subcategory}</div>
         </div>
       </div>
 
@@ -363,7 +190,7 @@ function CompanyCard({ c }: { c: Company }) {
       </div>
 
       {/* Actions */}
-      <div className="px-3 py-2.5 flex items-center gap-2 border-t border-gray-100 bg-gray-50/50 mt-auto">
+      <div className="px-3 py-2.5 flex flex-wrap items-center gap-2 border-t border-gray-100 bg-gray-50/50 mt-auto">
         <Link
           href={`/company/${companySlugFromName(c.name)}`}
           className="px-3 py-1.5 text-xs font-medium border border-blue-600 rounded text-blue-700 hover:bg-blue-50 transition-colors"
@@ -377,12 +204,12 @@ function CompanyCard({ c }: { c: Company }) {
           onClick={() =>
             setFollowing((v) => {
               const next = !v;
-              void setFollowCompany(c.id, next); // guarded: no-op without Supabase
+              void setFollowCompany(c.id, next);
               return next;
             })
           }
           aria-pressed={following}
-          className={`ml-auto px-2.5 py-1.5 text-xs font-medium border rounded transition-colors ${
+          className={`sm:ml-auto px-2.5 py-1.5 text-xs font-medium border rounded transition-colors ${
             following
               ? "border-blue-600 bg-blue-50 text-blue-700"
               : "border-gray-300 text-gray-600 hover:bg-gray-50"
@@ -418,15 +245,18 @@ export default function MyNetworkPage() {
   const [activeTab, setActiveTab]     = useState<FilterTab>("all");
   const { filters, update, reset, hasActiveFilters } = useListingFilters();
   const [listingStatus, setListingStatus] = useState<"all" | "active" | "expired">("all");
-  const [savedRows, setSavedRows] = useState<SavedListing[]>(savedListings);
-  const [companyRows, setCompanyRows] = useState<Company[]>(companies);
+  const [savedRows, setSavedRows] = useState<SavedListing[]>([]);
+  const [companyRows, setCompanyRows] = useState<Company[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  // Load real companies + the user's saved/followed sets when Supabase is
-  // configured; otherwise keep the mock seed so the dev app stays functional.
   useEffect(() => {
     let active = true;
     void fetchNetworkData().then((data) => {
-      if (!active || !data) return;
+      if (!active) return;
+      if (data === null) {
+        setLoaded(true);
+        return;
+      }
       const savedSet = new Set(data.savedCompanyIds);
       const followSet = new Set(data.followedCompanyIds);
       const mapped: Company[] = data.companies.map((c) => {
@@ -437,6 +267,8 @@ export default function MyNetworkPage() {
         if (savedSet.has(id)) tabs.push("saved-companies");
         const caps = Array.isArray(c.capabilities) ? (c.capabilities as unknown[]).map(String) : [];
         const tags = Array.isArray(c.tags) ? (c.tags as unknown[]).map(String) : [];
+        const certs = data.profileCertsByCompany[id] ?? [];
+        const oppTags = data.opportunityTagsByCompany[id] ?? [];
         return {
           id,
           type: "offer",
@@ -448,10 +280,10 @@ export default function MyNetworkPage() {
           summary: String(c.about ?? c.tagline ?? ""),
           capabilities: caps,
           industriesServed: tags,
-          certifications: [],
+          certifications: certs,
           equipment: "",
           equipmentLabel: "Capabilities",
-          opportunityTags: [],
+          opportunityTags: oppTags,
           verified:
             c.verification_status === "verified" || (!c.verification_status && Boolean(c.verified)),
           tabs,
@@ -478,6 +310,7 @@ export default function MyNetworkPage() {
         }];
       });
       setSavedRows(mappedSaved);
+      setLoaded(true);
     });
     return () => {
       active = false;
@@ -512,10 +345,14 @@ export default function MyNetworkPage() {
     void setSavedListing(id, false); // guarded: no-op without Supabase
   };
 
+  const followingCount = companyRows.filter((c) => c.tabs.includes("following")).length;
+  const savedCompanyCount = companyRows.filter((c) => c.tabs.includes("saved-companies")).length;
+  const connectionCount = companyRows.filter((c) => c.tabs.includes("connections")).length;
+
   const kpis = [
     {
       tab: "following" as FilterTab,
-      label: "Following", value: 24,
+      label: "Following", value: followingCount,
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V19a4 4 0 00-4-4H9a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
@@ -525,7 +362,7 @@ export default function MyNetworkPage() {
     },
     {
       tab: "saved-companies" as FilterTab,
-      label: "Saved Companies", value: 18,
+      label: "Saved Companies", value: savedCompanyCount,
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -535,7 +372,7 @@ export default function MyNetworkPage() {
     },
     {
       tab: "saved-listings" as FilterTab,
-      label: "Saved Listings", value: 36,
+      label: "Saved Listings", value: savedRows.length,
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -545,7 +382,7 @@ export default function MyNetworkPage() {
     },
     {
       tab: "connections" as FilterTab,
-      label: "Connections", value: 42,
+      label: "Connections", value: connectionCount,
       icon: (
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -556,7 +393,7 @@ export default function MyNetworkPage() {
   ];
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-4">
+    <div className="max-w-screen-xl mx-auto px-4 py-4 min-w-0">
       {/* Header */}
       <div className="mb-4">
         <h1 className="text-base font-bold text-gray-900">My Network</h1>
@@ -564,20 +401,20 @@ export default function MyNetworkPage() {
       </div>
 
       {/* KPI row — clickable tabs */}
-      <div className="grid grid-cols-4 gap-0 bg-white border border-gray-200 rounded-xl mb-4 overflow-hidden">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-0 bg-white border border-gray-200 rounded-xl mb-4 lg:overflow-hidden">
         {kpis.map((kpi, i) => (
           <button key={kpi.tab} onClick={() => setActiveTab(activeTab === kpi.tab ? "all" : kpi.tab)}
-            className={`flex items-center gap-3 px-5 py-3.5 transition-colors text-left ${
-              i < kpis.length - 1 ? "border-r border-gray-200" : ""
+            className={`flex flex-col items-start gap-2 lg:flex-row lg:items-center lg:gap-3 px-3 py-4 lg:px-5 lg:py-3.5 transition-colors text-left rounded-xl lg:rounded-none border border-gray-200 lg:border-0 ${
+              i < kpis.length - 1 ? "lg:border-r lg:border-gray-200" : ""
             } ${activeTab === kpi.tab ? "bg-blue-50" : "hover:bg-gray-50"}`}>
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${kpi.iconBg}`}>
               {kpi.icon}
             </div>
             <div>
-              <div className={`text-base font-bold leading-tight ${activeTab === kpi.tab ? "text-blue-700" : "text-gray-900"}`}>
+              <div className={`text-lg lg:text-base font-bold leading-tight ${activeTab === kpi.tab ? "text-blue-700" : "text-gray-900"}`}>
                 {kpi.value}
               </div>
-              <div className="text-xs text-gray-500 leading-tight">{kpi.label}</div>
+              <div className="text-xs text-gray-500 leading-snug">{kpi.label}</div>
             </div>
           </button>
         ))}
@@ -596,6 +433,7 @@ export default function MyNetworkPage() {
             : `${filteredCompanies.length} compan${filteredCompanies.length !== 1 ? "ies" : "y"}`
         }
         options={{
+          industries: facets.industries,
           subcategoriesByIndustry: facets.subcategoriesByIndustry,
           capabilities: facets.capabilities,
           locations: facets.locations,
@@ -608,8 +446,22 @@ export default function MyNetworkPage() {
       {/* Company grid */}
       {!isSavedListings && (
         filteredCompanies.length === 0 ? (
-          <div className="py-12 text-center text-sm text-gray-400 bg-white border border-gray-200 rounded-xl">
-            No companies match your filters.
+          <div className="py-12 text-center bg-white border border-gray-200 rounded-xl px-6">
+            {!loaded ? (
+              <p className="text-sm text-gray-400">Loading network…</p>
+            ) : companyRows.length === 0 ? (
+              <>
+                <p className="text-sm text-gray-600">No approved companies on CapMaxx yet.</p>
+                <p className="text-xs text-gray-400 mt-1 mb-4">
+                  As businesses join and get approved, you can follow and connect with them here.
+                </p>
+                <Link href="/i-offer" className="text-xs font-medium text-blue-700 hover:underline">
+                  Browse marketplace listings →
+                </Link>
+              </>
+            ) : (
+              <p className="text-sm text-gray-400">No companies match your filters.</p>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -636,25 +488,47 @@ export default function MyNetworkPage() {
           </div>
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
             {filteredListings.length === 0 ? (
-              <div className="py-8 text-center text-sm text-gray-400">No listings match your filters.</div>
+              <div className="py-8 text-center px-6">
+                {!loaded ? (
+                  <p className="text-sm text-gray-400">Loading saved listings…</p>
+                ) : savedRows.length === 0 ? (
+                  <>
+                    <p className="text-sm text-gray-600">No saved listings yet.</p>
+                    <p className="text-xs text-gray-400 mt-1 mb-4">
+                      Save listings from I Offer or I Need to revisit them here.
+                    </p>
+                    <Link href="/i-offer" className="text-xs font-medium text-blue-700 hover:underline">
+                      Browse listings →
+                    </Link>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400">No listings match your filters.</p>
+                )}
+              </div>
             ) : (
               filteredListings.map((l) => (
-                <div key={l.id} className={`flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${l.status === "expired" ? "opacity-60" : ""}`}>
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${
+                <div key={l.id} className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${l.status === "expired" ? "opacity-60" : ""}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 self-start ${
                     l.type === "offer" ? "bg-green-50 text-green-700 border-green-200" : "bg-orange-50 text-orange-700 border-orange-200"
                   }`}>
                     {l.type === "offer" ? "Offer" : "Need"}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className={`text-sm font-medium truncate ${l.status === "expired" ? "text-gray-400 line-through" : "text-gray-900"}`}>{l.title}</div>
-                    <div className="text-xs text-gray-400 flex items-center gap-2">
-                      <span>{l.company}</span><span className="text-gray-300">·</span>
-                      <span>{l.industry}</span><span className="text-gray-300">·</span>
-                      <span>Saved {l.saved}</span>
+                    <div className="text-xs text-gray-400 flex flex-wrap gap-x-2 gap-y-0.5">
+                      <span>{l.company}</span>
+                      <span className="hidden sm:inline text-gray-300">·</span>
+                      <span>{l.industry}</span>
+                      {l.saved && (
+                        <>
+                          <span className="hidden sm:inline text-gray-300">·</span>
+                          <span>Saved {l.saved}</span>
+                        </>
+                      )}
                       {l.status === "expired" && <span className="text-red-400 font-medium">Expired</span>}
                     </div>
                   </div>
-                  <div className="flex gap-2 text-xs shrink-0 items-center">
+                  <div className="flex flex-wrap gap-2 text-xs shrink-0 items-center">
                     {l.status === "active" ? (
                       <>
                         <Link href={`/company/${companySlugFromName(l.company)}`} className="text-blue-700 hover:underline">View</Link>

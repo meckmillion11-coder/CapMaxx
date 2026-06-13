@@ -372,7 +372,7 @@ export default function Home() {
           {/* Right — sample listing card */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-md">
             {/* header: badges + bookmark */}
-            <div className="flex items-center gap-2 px-5 pt-4">
+            <div className="flex flex-wrap items-center gap-2 px-5 pt-4">
               <span className="text-[10px] font-bold px-2 py-0.5 rounded tracking-wide bg-green-100 text-green-700">
                 WE OFFER
               </span>
@@ -394,7 +394,7 @@ export default function Home() {
               <div className="min-w-0">
                 <h3 className="text-base font-bold text-gray-900 leading-snug">CNC Precision Aluminum Brackets</h3>
                 <div className="flex items-center gap-1 mt-1">
-                  <span className="text-[13px] font-medium text-gray-700">Midwest Precision Parts Co.</span>
+                  <span className="text-[13px] font-medium text-gray-700">Your Company Name</span>
                   <Icon name="verified" className="w-4 h-4 text-blue-600 shrink-0" solid />
                 </div>
                 <div className="flex items-center gap-1 mt-1 text-gray-500">
@@ -419,7 +419,7 @@ export default function Home() {
             </div>
 
             {/* footer actions */}
-            <div className="px-5 py-3.5 mt-3 flex items-center gap-4 border-t border-gray-100">
+            <div className="px-5 py-3.5 mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-gray-100">
               <Link href="/company/midwest-precision-parts" className="text-[12px] font-medium text-blue-700 hover:underline">
                 View Profile
               </Link>
@@ -429,7 +429,7 @@ export default function Home() {
               <span className="text-[12px] font-medium text-blue-700 hover:underline cursor-pointer">Save</span>
               <Link
                 href="/company/midwest-precision-parts"
-                className="ml-auto px-5 py-2 text-[12px] font-semibold text-white bg-blue-900 hover:bg-blue-950 rounded-md transition-colors"
+                className="w-full sm:w-auto sm:ml-auto px-5 py-2 text-center text-[12px] font-semibold text-white bg-blue-900 hover:bg-blue-950 rounded-md transition-colors"
               >
                 Connect
               </Link>
@@ -502,7 +502,7 @@ export default function Home() {
             <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide mb-6">
               What Can You<br className="hidden sm:block" /> Showcase
             </h2>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-5">
               {showcaseItems.map((item) => (
                 <div key={item.label} className="flex flex-col items-center text-center gap-2">
                   <span className="text-green-600">

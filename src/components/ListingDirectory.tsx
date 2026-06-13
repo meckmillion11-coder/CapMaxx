@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { mockListings, type Listing } from "@/lib/mockListings";
+import type { Listing } from "@/lib/mockListings";
 import { fetchListingsByType } from "@/lib/db/reads";
 import ListingCard from "./ListingCard";
+import MarketplaceEmptyExamples from "./MarketplaceEmptyExamples";
 import ListingFilters, {
   buildFacets,
   filterListings,
@@ -54,21 +55,31 @@ export default function ListingDirectory({ type }: ListingDirectoryProps) {
   const { filters, update, reset, hasActiveFilters } = useListingFilters();
   const [page, setPage] = useState(1);
 
-  // Real listings when Supabase is configured; otherwise the mock seed. The
-  // fallback `mockListings` keeps the dev app fully functional without env vars.
-  const [rows, setRows] = useState<Listing[] | null>(null);
+  const [rows, setRows] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [configured, setConfigured] = useState(true);
+
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setRows([]);
     void fetchListingsByType(type).then((data) => {
-      if (active && data) setRows(data);
+      if (!active) return;
+      if (data !== null) {
+        setRows(data);
+        setConfigured(true);
+      } else {
+        setRows([]);
+        setConfigured(false);
+      }
+      setLoading(false);
     });
     return () => {
       active = false;
     };
   }, [type]);
 
-  const source = rows ?? mockListings;
-  const typeListings = useMemo(() => source.filter((l) => l.type === type), [source, type]);
+  const typeListings = useMemo(() => rows.filter((l) => l.type === type), [rows, type]);
 
   const facets = useMemo(() => buildFacets(typeListings.map(toFields)), [typeListings]);
 
@@ -105,9 +116,9 @@ export default function ListingDirectory({ type }: ListingDirectoryProps) {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-4">
+    <div className="max-w-screen-xl mx-auto px-4 py-4 min-w-0">
       {/* Page header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
         <div>
           <h1 className="text-base font-bold text-gray-900">{title}</h1>
           <p className="text-xs text-gray-500">{subtitle}</p>
@@ -131,29 +142,45 @@ export default function ListingDirectory({ type }: ListingDirectoryProps) {
         searchPlaceholder="Search by company, capability, product..."
         resultLabel={resultLabel}
         options={{
+          industries: facets.industries,
           subcategoriesByIndustry: facets.subcategoriesByIndustry,
           capabilities: facets.capabilities,
           locations: facets.locations,
           opportunityTypes: facets.opportunityTypes,
           capacities: facets.capacities,
           leadTimes: facets.leadTimes,
-          availabilities: availabilityOptions,
+          availabilities: availabilityOptions.filter((o) => facets.availabilities.includes(o.value)),
           certifications: facets.certifications,
           sortOptions,
         }}
       />
 
       {/* Card grid */}
-      {paginated.length > 0 ? (
+      {loading ? (
+        <div className="text-center py-16 text-gray-400 bg-white border border-gray-200 rounded-xl">
+          <p className="text-sm">Loading listings…</p>
+        </div>
+      ) : paginated.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
           {paginated.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 text-gray-400 bg-white border border-gray-200 rounded-xl">
-          <p className="text-sm">No listings found.</p>
-          <p className="text-xs mt-1">Try adjusting your search or filters.</p>
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {hasActiveFilters ? (
+            <div className="text-center py-16 px-6">
+              <p className="text-sm text-gray-600">No listings match your filters.</p>
+              <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filters.</p>
+            </div>
+          ) : configured ? (
+            <MarketplaceEmptyExamples type={type} />
+          ) : (
+            <div className="text-center py-16 px-6">
+              <p className="text-sm text-gray-600">Live listings are unavailable.</p>
+              <p className="text-xs text-gray-400 mt-1">Connect Supabase to load marketplace listings.</p>
+            </div>
+          )}
         </div>
       )}
 

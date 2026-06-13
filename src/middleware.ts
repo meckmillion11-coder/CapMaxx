@@ -5,18 +5,11 @@ import {
   SUPABASE_URL,
   isSupabaseConfigured,
 } from "@/lib/supabase/config";
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Route protection + Supabase session refresh
-//
-// Standard @supabase/ssr Next.js middleware: it reads the auth cookies from the
-// request, refreshes the session if needed, and writes the refreshed cookies
-// back onto the response. Protected routes redirect unauthenticated users to
-// /signin?redirect=<path>.
-//
-// IMPORTANT: when Supabase is NOT configured (env vars absent) we let every
-// request through so the dev app keeps working against the mock fallback.
-// ──────────────────────────────────────────────────────────────────────────────
+import {
+  getAdminEmailsFromEnv,
+  isPreLaunchMode,
+  isPreLaunchPublicPath,
+} from "@/lib/preLaunch";
 
 const PROTECTED_PREFIXES = [
   "/admin",
@@ -34,43 +27,55 @@ function isProtectedPath(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
-  // Dev fallback: Supabase unconfigured → never gate, never break the app.
-  if (!isSupabaseConfigured()) {
+  const { pathname } = request.nextUrl;
+
+  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon")) {
     return NextResponse.next();
   }
 
-  // Start with a pass-through response we can attach refreshed cookies to.
   let response = NextResponse.next({ request });
+  let user: { email?: string } | null = null;
 
-  const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+  if (isSupabaseConfigured()) {
+    const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value),
-        );
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options),
-        );
-      },
-    },
-  });
+    });
 
-  // getUser() refreshes the session (and triggers setAll above) when needed.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
 
-  const { pathname } = request.nextUrl;
-  if (!user && isProtectedPath(pathname)) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/signin";
-    redirectUrl.search = "";
-    redirectUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(redirectUrl);
+    if (!user && isProtectedPath(pathname)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/signin";
+      redirectUrl.search = "";
+      redirectUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  if (isPreLaunchMode()) {
+    const adminEmails = getAdminEmailsFromEnv();
+    const isAdmin = Boolean(
+      user?.email && adminEmails.includes(user.email.toLowerCase()),
+    );
+
+    if (!isAdmin && !isPreLaunchPublicPath(pathname)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/intake";
+      redirectUrl.search = "";
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return response;
@@ -78,11 +83,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/admin/:path*",
-    "/my-business/:path*",
-    "/profile/:path*",
-    "/my-messages/:path*",
-    "/my-network/:path*",
-    "/request-form/:path*",
+    "/((?!_next/static|_next/image|.*\\..*).*)",
   ],
 };

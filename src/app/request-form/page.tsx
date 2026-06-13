@@ -5,20 +5,18 @@ import { industryMap, opportunityTypes } from "@/lib/industries";
 import { createListing } from "@/lib/db/listings";
 import { fetchMyCompanyPrefill } from "@/lib/db/reads";
 
-// ── Mock "My Business" profile ──────────────────────────────────────────────
-// In production this would come from the authenticated user's saved profile.
-const myProfile = {
-  name:        "Midwest Precision Parts Co.",
-  website:     "midwestprecision.com",
-  location:    "Chicago, IL",
-  industry:    "Manufacturing",
-  subcategory: "CNC Machining",
-  description: "Family-owned precision machining company serving aerospace and automotive industries since 1998. ISO 9001 and AS9100D certified.",
-  logoLetter:  "M",
-  logoColor:   "bg-blue-100 text-blue-800",
-  contacts: [
-    { id: "0", name: "James Hartley", position: "Operations Manager", phone: "(312) 555-0182", email: "james@midwestprecision.com", linkedin: "linkedin.com/in/james-hartley" },
-  ],
+// ── Request-form prefill defaults (loaded from Supabase on mount) ─────────────
+
+const emptyProfile = {
+  name: "",
+  website: "",
+  location: "",
+  industry: "",
+  subcategory: "",
+  description: "",
+  logoLetter: "C",
+  logoColor: "bg-blue-100 text-blue-800",
+  contacts: [] as { id: string; name: string; position: string; phone: string; email: string; linkedin: string }[],
 };
 
 // ── Tag suggestions per industry/subcategory ─────────────────────────────────
@@ -106,14 +104,14 @@ export default function RequestFormPage() {
 
   // Company info — pre-filled from profile; toggled editable
   const [companyExpanded, setCompanyExpanded] = useState(false);
-  const [companyName, setCompanyName]         = useState(myProfile.name);
-  const [website, setWebsite]                 = useState(myProfile.website);
-  const [location, setLocation]               = useState(myProfile.location);
-  const [companyDesc, setCompanyDesc]         = useState(myProfile.description);
+  const [companyName, setCompanyName]         = useState(emptyProfile.name);
+  const [website, setWebsite]                 = useState(emptyProfile.website);
+  const [location, setLocation]               = useState(emptyProfile.location);
+  const [companyDesc, setCompanyDesc]         = useState(emptyProfile.description);
 
   // Industry + subcategory + tags
-  const [industry, setIndustry]           = useState(myProfile.industry);
-  const [subcategory, setSubcategory]     = useState(myProfile.subcategory);
+  const [industry, setIndustry]           = useState(emptyProfile.industry);
+  const [subcategory, setSubcategory]     = useState(emptyProfile.subcategory);
   const [tags, setTags]                   = useState<string[]>([]);
   const [tagInput, setTagInput]           = useState("");
 
@@ -127,7 +125,7 @@ export default function RequestFormPage() {
   const [opportunities, setOpportunities] = useState<string[]>([]);
 
   // Contacts — pre-filled from profile
-  const [contacts, setContacts] = useState<Contact[]>(myProfile.contacts.map((c) => ({ ...c })));
+  const [contacts, setContacts] = useState<Contact[]>(emptyProfile.contacts.map((c) => ({ ...c })));
 
   // Media
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
@@ -140,7 +138,7 @@ export default function RequestFormPage() {
   const videoRef = useRef<HTMLInputElement>(null);
 
   // Prefill company info from the signed-in user's real company when Supabase
-  // is configured. Falls back to the mock `myProfile` defaults otherwise.
+  // is configured. Falls back to the mock `emptyProfile` defaults otherwise.
   useEffect(() => {
     let active = true;
     void fetchMyCompanyPrefill().then((c) => {
@@ -210,7 +208,7 @@ export default function RequestFormPage() {
   }
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-4">
+    <div className="max-w-screen-xl mx-auto px-4 py-4 min-w-0">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-base font-bold text-gray-900">My Request Form</h1>
@@ -247,8 +245,8 @@ export default function RequestFormPage() {
           <div className="bg-white border border-gray-200 rounded overflow-hidden">
             {/* Collapsed summary */}
             <div className="flex items-center gap-3 px-4 py-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${myProfile.logoColor}`}>
-                {myProfile.logoLetter}
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${emptyProfile.logoColor}`}>
+                {emptyProfile.logoLetter}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-gray-900">{companyName}</div>
@@ -603,9 +601,9 @@ export default function RequestFormPage() {
           </div>
 
           {/* ── SUBMIT ── */}
-          <div className="flex justify-end items-center gap-3 pb-6">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:items-center gap-3 pb-6">
             {draftSaved && (
-              <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+              <span className="text-xs text-green-600 font-medium flex items-center justify-center gap-1 sm:justify-start">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
@@ -618,7 +616,7 @@ export default function RequestFormPage() {
                 setDraftSaved(true);
                 window.setTimeout(() => setDraftSaved(false), 2500);
               }}
-              className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+              className="w-full sm:w-auto px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
             >
               Save Draft
             </button>
@@ -644,7 +642,7 @@ export default function RequestFormPage() {
                 }
                 setSubmitted(true);
               }}
-              className="px-6 py-2 text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded transition-colors disabled:opacity-60">
+              className="w-full sm:w-auto px-6 py-2 text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded transition-colors disabled:opacity-60">
               {submitting ? "Submitting…" : "Submit Listing"}
             </button>
           </div>
@@ -674,13 +672,13 @@ export default function RequestFormPage() {
                   {listingType === "offer" ? "We Offer" : "We Need"}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Industry</span>
-                <span className="text-gray-700 font-medium">{industry || "—"}</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400 shrink-0">Industry</span>
+                <span className="text-gray-700 font-medium truncate max-w-[55%] text-right">{industry || "—"}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Subcategory</span>
-                <span className="text-gray-700 font-medium">{subcategory || "—"}</span>
+              <div className="flex justify-between gap-2">
+                <span className="text-gray-400 shrink-0">Subcategory</span>
+                <span className="text-gray-700 font-medium truncate max-w-[55%] text-right">{subcategory || "—"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Tags</span>

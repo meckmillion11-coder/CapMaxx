@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { resolveCommButtons, type CompanyContact, type VideoLink } from "@/lib/companyContact";
+import { resolveCommButtons, type VideoLink } from "@/lib/companyContact";
 import { companySlugFromName } from "@/lib/mockCompanies";
 import { sendMessageToCompany } from "@/lib/db/messages";
 import { fetchMyThreads, fetchThreadMessages } from "@/lib/db/reads";
@@ -21,86 +21,7 @@ interface Conversation {
   unread: number;
 }
 
-const conversations: Conversation[] = [
-  { id: "1", company: "Summit Cold Storage LLC", location: "Denver, CO", industry: "Logistics", avatar: "S", color: "bg-purple-100 text-purple-800", lastMessage: "Are you able to handle a run of 200 units next week?", time: "2h ago", unread: 2 },
-  { id: "2", company: "BlueLine Transport Inc.", location: "Atlanta, GA", industry: "Freight", avatar: "B", color: "bg-sky-100 text-sky-800", lastMessage: "Thanks for the quote. We'd like to move forward.", time: "Yesterday", unread: 0 },
-  { id: "3", company: "GreenLeaf Packaging Co.", location: "Portland, OR", industry: "Packaging", avatar: "G", color: "bg-green-100 text-green-800", lastMessage: "Do you work with biodegradable materials?", time: "Mon", unread: 1 },
-  { id: "4", company: "TechAssembly Solutions", location: "Austin, TX", industry: "Electronics", avatar: "T", color: "bg-orange-100 text-orange-800", lastMessage: "Let's set up a call to discuss the project scope.", time: "Mar 28", unread: 0 },
-  { id: "5", company: "Apex Fabrication Group", location: "Detroit, MI", industry: "Manufacturing", avatar: "A", color: "bg-red-100 text-red-800", lastMessage: "We can accommodate up to 300 parts per week.", time: "Mar 25", unread: 0 },
-  { id: "6", company: "Hartwell Injection Molding", location: "Cincinnati, OH", industry: "Plastics", avatar: "H", color: "bg-yellow-100 text-yellow-800", lastMessage: "Sent you the spec sheet. Let me know if you have questions.", time: "Mar 22", unread: 0 },
-];
-
 type ChatMessage = { from: "me" | "them"; text: string; time: string; file?: { name: string; size: string } };
-
-const initialThreads: Record<string, ChatMessage[]> = {
-  "1": [
-    { from: "them", text: "Hi, we came across your CNC machining listing on CapMaxx.", time: "Mar 30, 9:12 AM" },
-    { from: "me", text: "Hi! Thanks for reaching out. What are you looking for?", time: "Mar 30, 9:45 AM" },
-    { from: "them", text: "We need precision parts for a storage rack system. About 150 units.", time: "Mar 30, 10:02 AM" },
-    { from: "me", text: "That's well within our capacity. Can you share specs?", time: "Mar 30, 10:20 AM" },
-    { from: "them", text: "Specifications attached.", time: "Mar 30, 10:30 AM", file: { name: "rack_specs_v2.pdf", size: "1.4 MB" } },
-    { from: "them", text: "What's your typical lead time for 150 units?", time: "Mar 30, 10:35 AM" },
-    { from: "me", text: "Usually 3–5 business days for orders under 200 units.", time: "Mar 30, 11:00 AM" },
-    { from: "them", text: "Are you able to handle a run of 200 units next week?", time: "2h ago" },
-  ],
-  "2": [
-    { from: "them", text: "Hello, we need freight services for shipments to the Midwest.", time: "Apr 1, 2:00 PM" },
-    { from: "me", text: "We can help. What's the volume and frequency?", time: "Apr 1, 2:30 PM" },
-    { from: "them", text: "About 3 loads per week, dry van.", time: "Apr 1, 3:00 PM" },
-    { from: "me", text: "That works. Quote sent to your email.", time: "Apr 1, 3:15 PM" },
-    { from: "them", text: "Thanks for the quote. We'd like to move forward.", time: "Yesterday, 4:00 PM" },
-  ],
-  "3": [
-    { from: "them", text: "Hi, looking for a packaging supplier for a new product line.", time: "Mar 28, 10:00 AM" },
-    { from: "me", text: "Happy to help. What type of packaging do you need?", time: "Mar 28, 10:30 AM" },
-    { from: "them", text: "Do you work with biodegradable materials?", time: "Mon, 9:00 AM" },
-  ],
-  "4": [
-    { from: "them", text: "We need PCB assembly capacity for a new product launch.", time: "Mar 27, 11:00 AM" },
-    { from: "me", text: "Sure, what are the specs and volumes?", time: "Mar 27, 11:30 AM" },
-    { from: "them", text: "Let's set up a call to discuss the project scope.", time: "Mar 28, 9:00 AM" },
-  ],
-  "5": [
-    { from: "them", text: "We're interested in your sheet metal fabrication.", time: "Mar 25, 8:00 AM" },
-    { from: "me", text: "Great — we handle welding and fabrication up to ½ inch steel.", time: "Mar 25, 9:00 AM" },
-    { from: "them", text: "We can accommodate up to 300 parts per week.", time: "Mar 25, 2:00 PM" },
-  ],
-  "6": [
-    { from: "them", text: "Hello, do you do injection molding for small runs?", time: "Mar 22, 10:00 AM" },
-    { from: "me", text: "Yes, minimum order is 500 parts.", time: "Mar 22, 10:45 AM" },
-    { from: "them", text: "Sent you the spec sheet. Let me know if you have questions.", time: "Mar 22, 11:30 AM", file: { name: "part_drawing_v1.pdf", size: "840 KB" } },
-  ],
-};
-
-const recentInterest = [
-  { id: "1", company: "Redrock Mining Supply", location: "Phoenix, AZ", listing: "CNC Machining Capacity", action: "Viewed your listing", time: "1 hour ago", avatar: "R", color: "bg-stone-100 text-stone-800" },
-  { id: "2", company: "NexGen Devices", location: "San Jose, CA", listing: "CNC Machining Capacity", action: "Saved your listing", time: "3 hours ago", avatar: "N", color: "bg-cyan-100 text-cyan-800" },
-  { id: "3", company: "FreshBake Distribution", location: "Dallas, TX", listing: "Precision Parts – Overflow", action: "Viewed your listing", time: "Yesterday", avatar: "F", color: "bg-lime-100 text-lime-800" },
-  { id: "4", company: "BuildRight Contractors", location: "Houston, TX", listing: "CNC Machining Capacity", action: "Requested connection", time: "Yesterday", avatar: "B", color: "bg-amber-100 text-amber-800" },
-  { id: "5", company: "Orion Sportswear", location: "Los Angeles, CA", listing: "CNC Machining Capacity", action: "Viewed your listing", time: "2 days ago", avatar: "O", color: "bg-pink-100 text-pink-800" },
-];
-
-// Per-conversation contact links (mock). Buttons hide when a link is missing.
-const contactLinks: Record<string, CompanyContact> = {
-  "1": { phone: "+1 (720) 555-0147", zoom: "https://zoom.us/j/12345678", calendly: "https://calendly.com/summit-cold" },
-  "2": { phone: "+1 (404) 555-0192", calendly: "https://calendly.com/blueline" },
-  "3": { phone: "+1 (503) 555-0234", teams: "https://teams.microsoft.com/meet", calendly: "https://calendly.com/greenleaf" },
-  // No phone → Call button hidden; has Google Meet + scheduling.
-  "4": { meet: "https://meet.google.com/abc-defg-hij", calendly: "https://calendar.google.com/r" },
-  // Phone only → Video Call + Schedule buttons hidden.
-  "5": { phone: "+1 (313) 555-0129" },
-  "6": { phone: "+1 (513) 555-0267", zoom: "https://zoom.us/j/99887766", calendly: "https://outlook.office.com/bookings/hartwell" },
-};
-
-// Profile modal data
-const profileData: Record<string, { company: string; location: string; industry: string; subcategory: string; teamSize: string; website: string; about: string; certifications: string[]; listings: { title: string; type: "offer" | "need" }[] }> = {
-  "1": { company: "Summit Cold Storage LLC", location: "Denver, CO", industry: "Logistics", subcategory: "Warehousing", teamSize: "28", website: "summitcoldstorage.com", about: "Summit Cold Storage provides refrigerated and frozen warehousing solutions across the Rocky Mountain region, with 24/7 operations and FDA-certified facilities.", certifications: ["FDA", "SQF Level 2"], listings: [{ title: "Refrigerated Warehousing & Distribution", type: "offer" }, { title: "Looking for Frozen Food Co-Pack Partner", type: "need" }] },
-  "2": { company: "BlueLine Transport Inc.", location: "Atlanta, GA", industry: "Freight", subcategory: "Dry Van", teamSize: "22", website: "bluelinetransport.com", about: "BlueLine runs dry van and flatbed freight throughout the Southeast and Midwest with a fleet of 22 company-owned trucks.", certifications: ["FMCSA", "DOT"], listings: [{ title: "Flatbed & Dry Van Freight, OTR", type: "offer" }] },
-  "3": { company: "GreenLeaf Packaging Co.", location: "Portland, OR", industry: "Packaging", subcategory: "Corrugated", teamSize: "35", website: "greenleafpkg.com", about: "GreenLeaf designs and manufactures sustainable corrugated packaging solutions for retail and e-commerce brands.", certifications: ["FSC", "ISO 14001"], listings: [{ title: "Custom Corrugated Packaging, Design", type: "offer" }, { title: "Seeking Biodegradable Film Supplier", type: "need" }] },
-  "4": { company: "TechAssembly Solutions", location: "Austin, TX", industry: "Electronics", subcategory: "PCB Assembly", teamSize: "45", website: "techassemblysolutions.com", about: "Contract electronics manufacturer specializing in PCB assembly, box builds, and testing services for OEMs.", certifications: ["IPC-A-610", "ISO 9001"], listings: [{ title: "PCB Assembly, Electronics Manufacturing", type: "offer" }] },
-  "5": { company: "Apex Fabrication Group", location: "Detroit, MI", industry: "Manufacturing", subcategory: "Fabrication", teamSize: "18", website: "apexfab.com", about: "Apex specializes in custom sheet metal fabrication and structural welding for automotive and industrial clients.", certifications: ["AWS D1.1"], listings: [{ title: "Sheet Metal Fabrication, Welding", type: "offer" }] },
-  "6": { company: "Hartwell Injection Molding", location: "Cincinnati, OH", industry: "Plastics", subcategory: "Injection Molding", teamSize: "20", website: "hartwellmolding.com", about: "Hartwell runs 12 injection molding presses producing plastic components for medical, consumer, and industrial markets.", certifications: ["ISO 9001"], listings: [{ title: "Injection Molding, Plastic Parts", type: "offer" }] },
-};
 
 function VideoIcon({ type }: { type: VideoLink["type"] }) {
   const map: Record<VideoLink["type"], { bg: string; label: string }> = {
@@ -117,7 +38,7 @@ function VideoIcon({ type }: { type: VideoLink["type"] }) {
 }
 
 export default function MyMessagesPage() {
-  const [activeConv, setActiveConv] = useState("1");
+  const [activeConv, setActiveConv] = useState("");
   const [msgTab, setMsgTab] = useState<MsgTab>("messages");
   const [draft, setDraft] = useState("");
   const [showAttach, setShowAttach] = useState(false);
@@ -125,10 +46,11 @@ export default function MyMessagesPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [search, setSearch] = useState("");
   const [videoMenuOpen, setVideoMenuOpen] = useState(false);
-  const [threads, setThreads] = useState<Record<string, ChatMessage[]>>(initialThreads);
+  const [threads, setThreads] = useState<Record<string, ChatMessage[]>>({});
   const [pendingAttachment, setPendingAttachment] = useState<{ name: string; size: string } | null>(null);
-  const [convList, setConvList] = useState<Conversation[]>(conversations);
-  // Maps a conversation/thread id → the real company UUID for sending messages.
+  const [convList, setConvList] = useState<Conversation[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [mobileShowChat, setMobileShowChat] = useState(false);
   const [threadCompany, setThreadCompany] = useState<Record<string, string>>({});
   const videoRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,7 +60,7 @@ export default function MyMessagesPage() {
     convList.find((c) => c.id === activeConv) ??
     convList[0] ?? {
       id: "",
-      company: "No conversations",
+      company: "No conversations yet",
       location: "",
       industry: "",
       avatar: "·",
@@ -148,9 +70,8 @@ export default function MyMessagesPage() {
       unread: 0,
     };
   const messages = threads[activeConv] || [];
-  const profile = profileData[activeConv];
   const totalUnread = convList.reduce((n, c) => n + c.unread, 0);
-  const { call, video, schedule } = resolveCommButtons(contactLinks[activeConv]);
+  const { call, video, schedule } = resolveCommButtons(undefined);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -161,26 +82,28 @@ export default function MyMessagesPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Load real threads when Supabase is configured; otherwise keep the mock
-  // conversations so the dev app stays functional.
+  // Load real threads when Supabase is configured.
   useEffect(() => {
     let active = true;
     void fetchMyThreads().then((data) => {
-      if (!active || !data) return;
-      const mapped: Conversation[] = data.map((t) => ({
-        id: t.id,
-        company: t.company,
-        location: "",
-        industry: t.subject || "",
-        avatar: (t.company[0] ?? "C").toUpperCase(),
-        color: "bg-blue-100 text-blue-800",
-        lastMessage: t.lastMessage,
-        time: t.time,
-        unread: t.unread,
-      }));
-      setConvList(mapped);
-      setThreadCompany(Object.fromEntries(data.map((t) => [t.id, t.companyId])));
-      if (mapped.length > 0) setActiveConv(mapped[0].id);
+      if (!active) return;
+      if (data !== null) {
+        const mapped: Conversation[] = data.map((t) => ({
+          id: t.id,
+          company: t.company,
+          location: "",
+          industry: t.subject || "",
+          avatar: (t.company[0] ?? "C").toUpperCase(),
+          color: "bg-blue-100 text-blue-800",
+          lastMessage: t.lastMessage,
+          time: t.time,
+          unread: t.unread,
+        }));
+        setConvList(mapped);
+        setThreadCompany(Object.fromEntries(data.map((t) => [t.id, t.companyId])));
+        if (mapped.length > 0) setActiveConv(mapped[0].id);
+      }
+      setLoaded(true);
     });
     return () => {
       active = false;
@@ -249,9 +172,9 @@ export default function MyMessagesPage() {
   });
 
   return (
-    <div className="max-w-screen-xl mx-auto px-4 py-3">
+    <div className="max-w-screen-xl mx-auto px-4 py-4 min-w-0">
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-3 border-b border-gray-200">
+      <div className="flex items-center gap-1 mb-3 border-b border-gray-200 overflow-x-auto min-w-0">
         <h1 className="text-sm font-bold text-gray-900 pr-4">My Messages</h1>
         <button onClick={() => setMsgTab("messages")}
           className={`px-4 py-2 text-sm border-b-2 -mb-px transition-colors ${msgTab === "messages" ? "border-blue-700 text-blue-700 font-medium" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
@@ -263,16 +186,19 @@ export default function MyMessagesPage() {
         <button onClick={() => setMsgTab("interest")}
           className={`px-4 py-2 text-sm border-b-2 -mb-px transition-colors ${msgTab === "interest" ? "border-blue-700 text-blue-700 font-medium" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
           Recent Interest
-          <span className="ml-1.5 text-[10px] bg-gray-200 text-gray-600 font-bold px-1.5 py-0.5 rounded-full">{recentInterest.length}</span>
         </button>
       </div>
 
       {/* ── MESSAGES ── */}
       {msgTab === "messages" && (
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden bg-white" style={{ height: "calc(100vh - 118px)", minHeight: "520px" }}>
+        <div
+          className={`flex flex-col lg:flex-row rounded-lg border border-gray-200 overflow-hidden bg-white lg:h-[calc(100vh-118px)] lg:min-h-[520px] ${
+            mobileShowChat ? "h-[calc(100dvh-118px)]" : "min-h-[480px]"
+          }`}
+        >
 
-          {/* LEFT: Conversation list — 25% */}
-          <div className="w-64 shrink-0 flex flex-col border-r border-gray-200">
+          {/* LEFT: Conversation list */}
+          <div className={`w-full lg:w-64 shrink-0 flex flex-col border-r border-gray-200 min-h-0 ${mobileShowChat ? "hidden lg:flex" : "flex"}`}>
             {/* Search */}
             <div className="p-2.5 border-b border-gray-100">
               <div className="relative">
@@ -298,12 +224,18 @@ export default function MyMessagesPage() {
             {/* Conversation items */}
             <div className="flex-1 overflow-y-auto">
               {filteredConvs.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center pt-6">
-                  {term ? "No conversations match your search" : "No unread messages"}
+                <p className="text-xs text-gray-400 text-center pt-6 px-3">
+                  {!loaded
+                    ? "Loading conversations…"
+                    : term
+                      ? "No conversations match your search"
+                      : filter === "unread"
+                        ? "No unread messages"
+                        : "No messages yet. When businesses contact you, conversations will appear here."}
                 </p>
               ) : (
                 filteredConvs.map((c) => (
-                  <button key={c.id} onClick={() => { setActiveConv(c.id); setProfileOpen(false); setVideoMenuOpen(false); }}
+                  <button key={c.id} onClick={() => { setActiveConv(c.id); setProfileOpen(false); setVideoMenuOpen(false); setMobileShowChat(true); }}
                     className={`w-full text-left px-3 py-3 flex gap-2.5 items-start transition-colors border-b border-gray-50 ${
                       activeConv === c.id
                         ? "bg-blue-50 border-r-2 border-blue-700"
@@ -336,11 +268,21 @@ export default function MyMessagesPage() {
             </div>
           </div>
 
-          {/* RIGHT: Chat — 75% */}
-          <div className="flex-1 flex flex-col min-w-0">
+          {/* RIGHT: Chat */}
+          <div className={`flex-1 flex flex-col min-w-0 min-h-0 ${mobileShowChat ? "flex" : "hidden lg:flex"}`}>
 
             {/* Chat header */}
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 bg-white shrink-0">
+            <div className="flex items-center gap-2 lg:gap-3 px-3 lg:px-5 py-3 border-b border-gray-100 bg-white shrink-0">
+              <button
+                type="button"
+                onClick={() => setMobileShowChat(false)}
+                className="lg:hidden p-1.5 -ml-1 rounded-md text-gray-500 hover:bg-gray-100 shrink-0"
+                aria-label="Back to conversations"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${conv.color}`}>
                 {conv.avatar}
               </div>
@@ -422,9 +364,18 @@ export default function MyMessagesPage() {
             <div className="flex flex-1 min-h-0">
 
               {/* Message thread */}
-              <div className="flex-1 flex flex-col min-w-0 min-h-0">
+              <div className={`flex-1 flex flex-col min-w-0 min-h-0 ${profileOpen ? "hidden lg:flex" : "flex"}`}>
                 <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                  {messages.map((msg, i) => (
+                  {messages.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-center px-6">
+                      <p className="text-sm text-gray-500">
+                        {convList.length === 0
+                          ? "No conversations yet. Messages from other businesses will appear here."
+                          : "No messages in this conversation yet. Say hello to get started."}
+                      </p>
+                    </div>
+                  ) : (
+                    messages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.from === "me" ? "justify-end" : "justify-start"}`}>
                       {msg.file ? (
                         <div className={`max-w-xs flex flex-col gap-1 ${msg.from === "me" ? "items-end" : "items-start"}`}>
@@ -466,7 +417,8 @@ export default function MyMessagesPage() {
                         </div>
                       )}
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
 
                 {/* Compose */}
@@ -526,9 +478,9 @@ export default function MyMessagesPage() {
                 </div>
               </div>
 
-              {/* Profile drawer — slides in when profileOpen */}
-              {profileOpen && profile && (
-                <div className="w-72 border-l border-gray-100 flex flex-col overflow-y-auto bg-white shrink-0">
+              {/* Profile drawer — full-screen on mobile, side panel on desktop */}
+              {profileOpen && activeConv && (
+                <div className="fixed inset-0 z-50 flex flex-col bg-white lg:static lg:relative lg:inset-auto lg:w-72 lg:z-auto border-l border-gray-100 overflow-y-auto shrink-0">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <span className="text-sm font-semibold text-gray-900">Company Profile</span>
                     <button onClick={() => setProfileOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -538,73 +490,26 @@ export default function MyMessagesPage() {
                     </button>
                   </div>
 
-                  {/* Company header */}
                   <div className="px-4 py-4 border-b border-gray-100">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-base font-bold mb-3 ${conv.color}`}>
                       {conv.avatar}
                     </div>
-                    <div className="text-sm font-bold text-gray-900 mb-0.5">{profile.company}</div>
-                    <div className="text-xs text-gray-400 mb-1">{profile.industry} › {profile.subcategory}</div>
-                    <div className="text-xs text-gray-500">{profile.location}</div>
+                    <div className="text-sm font-bold text-gray-900 mb-0.5">{conv.company}</div>
+                    {conv.industry && (
+                      <div className="text-xs text-gray-400 mb-1">{conv.industry}</div>
+                    )}
                   </div>
 
-                  {/* About */}
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-xs text-gray-500 leading-relaxed">{profile.about}</p>
-                  </div>
-
-                  {/* Details */}
-                  <div className="px-4 py-3 border-b border-gray-100 space-y-1.5 text-xs">
-                    <div className="flex gap-2"><span className="text-gray-400 w-16 shrink-0">Team Size</span><span className="text-gray-700">{profile.teamSize} employees</span></div>
-                    <div className="flex gap-2"><span className="text-gray-400 w-16 shrink-0">Website</span><a href={`https://${profile.website}`} className="text-blue-700 hover:underline truncate">{profile.website}</a></div>
-                  </div>
-
-                  {/* Certifications */}
-                  {profile.certifications.length > 0 && (
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Certifications</p>
-                      <div className="flex flex-wrap gap-1">
-                        {profile.certifications.map((cert) => (
-                          <span key={cert} className="inline-flex items-center gap-1 text-[11px] bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded font-medium">
-                            <svg className="w-2.5 h-2.5 text-blue-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            {cert}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Listings */}
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Listings</p>
-                    <div className="space-y-1.5">
-                      {profile.listings.map((l, i) => (
-                        <div key={i} className="flex items-start gap-2">
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 mt-0.5 ${
-                            l.type === "offer" ? "bg-green-50 text-green-700 border border-green-200" : "bg-orange-50 text-orange-700 border border-orange-200"
-                          }`}>
-                            {l.type === "offer" ? "Offer" : "Need"}
-                          </span>
-                          <span className="text-xs text-gray-700 leading-snug">{l.title}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Photos placeholder */}
-                  <div className="px-4 py-3">
-                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Photos</p>
-                    <div className="grid grid-cols-3 gap-1">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="aspect-square bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-300">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="px-4 py-6 text-center">
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      View the full company profile to see listings, certifications, and contact details.
+                    </p>
+                    <Link
+                      href={`/company/${companySlugFromName(conv.company)}`}
+                      className="inline-block mt-3 text-xs font-medium text-blue-700 hover:underline"
+                    >
+                      Open full profile →
+                    </Link>
                   </div>
                 </div>
               )}
@@ -615,41 +520,14 @@ export default function MyMessagesPage() {
 
       {/* ── RECENT INTEREST ── */}
       {msgTab === "interest" && (
-        <div className="bg-white border border-gray-200 rounded-lg">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="text-sm font-semibold text-gray-900">Companies that interacted with your listings</span>
-            <span className="text-xs text-gray-400">{recentInterest.length} recent</span>
-          </div>
-          {recentInterest.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${item.color}`}>
-                {item.avatar}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-semibold text-gray-900">{item.company}</span>
-                  <span className="text-xs text-gray-400">{item.location}</span>
-                </div>
-                <p className="text-xs text-gray-500">
-                  <span className="font-medium text-gray-700">{item.action}</span>
-                  {" · "}{item.listing}
-                  {" · "}<span className="text-gray-400">{item.time}</span>
-                </p>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <Link
-                  href={`/company/${companySlugFromName(item.company)}`}
-                  className="text-xs px-3 py-1.5 border border-gray-200 rounded-md hover:bg-gray-50 text-gray-700 transition-colors">
-                  View Profile
-                </Link>
-                <button
-                  onClick={() => setMsgTab("messages")}
-                  className="text-xs px-3 py-1.5 text-white bg-blue-700 hover:bg-blue-800 rounded-md transition-colors">
-                  Message
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="bg-white border border-gray-200 rounded-lg px-6 py-12 text-center">
+          <p className="text-sm font-medium text-gray-800">No listing interest yet</p>
+          <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
+            When businesses view, save, or request connections on your listings, those interactions will show up here.
+          </p>
+          <Link href="/my-business/listings" className="inline-block mt-4 text-xs font-medium text-blue-700 hover:underline">
+            Manage your listings →
+          </Link>
         </div>
       )}
     </div>

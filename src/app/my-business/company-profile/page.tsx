@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { externalHref, type CompanyContact } from "@/lib/companyContact";
-import { midwestPrecisionProfile, type CompanyProfile } from "@/lib/mockCompanies";
 import { industryMap } from "@/lib/industries";
+import type { CompanyProfile } from "@/lib/mockCompanies";
+import { fetchMyCompanyProfileForm } from "@/lib/db/reads";
 // Supabase persistence (all guarded — no-ops when Supabase isn't configured).
 import { saveCurrentUserCompany, setCompanyImage } from "@/lib/db/companies";
 import { saveCompanyProfile } from "@/lib/db/profiles";
@@ -296,53 +297,78 @@ interface ProfileSnapshot {
 
 // ──────────────────────────────────────────────────────────────────────────────
 export default function CompanyProfilePage() {
-  const seed = midwestPrecisionProfile;
-
-  // Header / banner
-  const [name, setName] = useState(seed.name);
-  const [tagline, setTagline] = useState(seed.tagline);
-  const [verified] = useState(seed.verified);
-  const [location, setLocation] = useState(seed.location);
-  const [founded, setFounded] = useState(seed.founded);
-  const [employeeRange, setEmployeeRange] = useState(seed.employeeRange);
-  const [cageCode, setCageCode] = useState(seed.cageCode);
-  const [coverLabel, setCoverLabel] = useState(seed.coverLabel);
+  const [name, setName] = useState("");
+  const [tagline, setTagline] = useState("");
+  const [verified, setVerified] = useState(false);
+  const [location, setLocation] = useState("");
+  const [founded, setFounded] = useState("");
+  const [employeeRange, setEmployeeRange] = useState("");
+  const [cageCode, setCageCode] = useState("");
+  const [coverLabel, setCoverLabel] = useState("");
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  // About
-  const [about, setAbout] = useState(seed.about);
-  const [aboutExtended, setAboutExtended] = useState(seed.aboutExtended);
+  const [about, setAbout] = useState("");
+  const [aboutExtended, setAboutExtended] = useState("");
 
-  // Contact + communication links (behavior preserved)
-  const [contact, setContact] = useState<CompanyContact>({ ...seed.contact });
+  const [contact, setContact] = useState<CompanyContact>({});
 
-  // Company details
-  const [details, setDetails] = useState({ ...seed.details });
+  const [details, setDetails] = useState({
+    industry: "",
+    subcategory: "",
+    businessType: "",
+    naicsCode: "",
+    dunsNumber: "",
+    taxId: "",
+  });
 
-  // Lists
-  const [capabilities, setCapabilities] = useState<string[]>([...seed.capabilities]);
-  const [tags, setTags] = useState<string[]>([...seed.tags]);
-  const [locations, setLocations] = useState<EditableLocation[]>(
-    seed.locations.map((l) => ({ id: uid(), ...l }))
-  );
-  const [certifications, setCertifications] = useState<EditableCert[]>(
-    seed.certifications.map((c) => ({ id: uid(), ...c }))
-  );
-  const [markets, setMarkets] = useState<EditableMarket[]>(
-    seed.marketsServed.map((m) => ({ id: uid(), ...m }))
-  );
-  const [gallery, setGallery] = useState<EditablePhoto[]>(
-    seed.gallery.map((g) => ({ id: uid(), ...g }))
-  );
-  const [videos, setVideos] = useState<EditableVideo[]>(
-    seed.videos.map((v) => ({ id: uid(), ...v }))
-  );
-  const [documents, setDocuments] = useState<EditableDoc[]>(
-    seed.documents.map((d) => ({ id: uid(), ...d }))
-  );
+  const [capabilities, setCapabilities] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [locations, setLocations] = useState<EditableLocation[]>([]);
+  const [certifications, setCertifications] = useState<EditableCert[]>([]);
+  const [markets, setMarkets] = useState<EditableMarket[]>([]);
+  const [gallery, setGallery] = useState<EditablePhoto[]>([]);
+  const [videos, setVideos] = useState<EditableVideo[]>([]);
+  const [documents, setDocuments] = useState<EditableDoc[]>([]);
 
   const [saved, setSaved] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void fetchMyCompanyProfileForm().then((data) => {
+      if (!active || !data) {
+        if (active) setLoaded(true);
+        return;
+      }
+      setName(data.name);
+      setTagline(data.tagline);
+      setVerified(data.verified);
+      setLocation(data.location);
+      setFounded(data.founded);
+      setEmployeeRange(data.employeeRange);
+      setCageCode(data.cageCode);
+      setCoverLabel(data.coverLabel);
+      setCoverPreview(data.coverPreview);
+      setLogoPreview(data.logoPreview);
+      setAbout(data.about);
+      setAboutExtended(data.aboutExtended);
+      setContact({ ...data.contact });
+      setDetails({ ...data.details });
+      setCapabilities([...data.capabilities]);
+      setTags([...data.tags]);
+      setLocations(data.locations.map((l) => ({ id: uid(), ...l })));
+      setCertifications(data.certifications.map((c) => ({ id: uid(), ...c })));
+      setMarkets(data.markets.map((m) => ({ id: uid(), ...m })));
+      setGallery(data.gallery.map((g) => ({ id: uid(), ...g })));
+      setVideos(data.videos.map((v) => ({ id: uid(), ...v })));
+      setDocuments(data.documents.map((d) => ({ id: uid(), ...d })));
+      setLoaded(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // View / Edit mode — default View (read-only). Snapshot captured on entering edit.
   const [mode, setMode] = useState<"view" | "edit">("view");
@@ -358,6 +384,15 @@ export default function CompanyProfilePage() {
   const touch = () => setSaved(false);
 
   const subcategories = details.industry ? industryMap[details.industry] ?? [] : [];
+  const logoInitials =
+    name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "CO";
+  const coverGradient = "from-slate-600 via-slate-700 to-gray-900";
+  const logoColor = "bg-blue-700 text-white";
 
   // ── Field updaters ─────────────────────────────────────────────────────────
   const updateLink = (key: keyof CompanyContact, value: string) => {
@@ -554,9 +589,13 @@ export default function CompanyProfilePage() {
           <div>
             <h1 className="text-base font-bold text-gray-900 leading-tight">Company Profile</h1>
             <p className="text-xs text-gray-400">
-              {mode === "edit"
-                ? "Editing — make your changes, then Save or Cancel."
-                : "Manage how your business appears to other companies on CapMaxx."}
+              {!loaded
+                ? "Loading your company profile…"
+                : mode === "edit"
+                  ? "Editing — make your changes, then Save or Cancel."
+                  : name
+                    ? "Manage how your business appears to other companies on CapMaxx."
+                    : "Add your company details so other businesses can find and connect with you."}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -593,7 +632,7 @@ export default function CompanyProfilePage() {
         <>
       {/* ── Header / Banner ── */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-3">
-        <div className={`relative h-40 sm:h-48 bg-gradient-to-br ${seed.coverGradient}`}>
+        <div className={`relative h-40 sm:h-48 bg-gradient-to-br ${coverGradient}`}>
           {coverPreview && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverPreview} alt="Cover preview" className="absolute inset-0 w-full h-full object-cover" />
@@ -633,9 +672,9 @@ export default function CompanyProfilePage() {
                 />
               ) : (
                 <div
-                  className={`w-20 h-20 rounded-lg border-4 border-white shadow-md flex items-center justify-center text-2xl font-bold ${seed.logoColor}`}
+                  className={`w-20 h-20 rounded-lg border-4 border-white shadow-md flex items-center justify-center text-2xl font-bold ${logoColor}`}
                 >
-                  {seed.logoInitials}
+                  {logoInitials}
                 </div>
               )}
               <input ref={logoRef} type="file" accept="image/*" onChange={onLogo} className="hidden" />
@@ -1096,7 +1135,7 @@ export default function CompanyProfilePage() {
         <>
           {/* ── Read-only banner ── */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-3">
-            <div className={`relative h-40 sm:h-48 bg-gradient-to-br ${seed.coverGradient}`}>
+            <div className={`relative h-40 sm:h-48 bg-gradient-to-br ${coverGradient}`}>
               {coverPreview && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={coverPreview} alt="Cover" className="absolute inset-0 w-full h-full object-cover" />
@@ -1119,9 +1158,9 @@ export default function CompanyProfilePage() {
                     />
                   ) : (
                     <div
-                      className={`w-20 h-20 rounded-lg border-4 border-white shadow-md flex items-center justify-center text-2xl font-bold ${seed.logoColor}`}
+                      className={`w-20 h-20 rounded-lg border-4 border-white shadow-md flex items-center justify-center text-2xl font-bold ${logoColor}`}
                     >
-                      {seed.logoInitials}
+                      {logoInitials}
                     </div>
                   )}
                 </div>

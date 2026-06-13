@@ -1,11 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  industries as allIndustries,
-  industryMap,
-  opportunityTypes as allOpportunityTypes,
-} from "@/lib/industries";
+import { useEffect, useMemo, useState } from "react";
 
 /* ──────────────────────────────────────────────────────────────────────────
    Shared, reusable filter system for every CapMaxx listing surface
@@ -160,14 +155,18 @@ export function buildFacets(fieldsList: FilterableFields[]) {
   const capacities = new Set<string>();
   const leadTimes = new Set<string>();
   const certifications = new Set<string>();
+  const industries = new Set<string>();
+  const availabilities = new Set<string>();
   const subsByIndustry: Record<string, Set<string>> = {};
 
   fieldsList.forEach((x) => {
+    if (x.industry) industries.add(x.industry);
     x.tags.forEach((t) => tags.add(t));
     if (x.location) locations.add(normalizeLocation(x.location));
     x.opportunityTags.forEach((o) => opportunities.add(o));
     if (x.capacity) capacities.add(x.capacity);
     if (x.leadTime) leadTimes.add(x.leadTime);
+    if (x.availability) availabilities.add(x.availability);
     (x.certifications ?? []).forEach((c) => certifications.add(c));
     if (x.industry && x.subcategory) {
       (subsByIndustry[x.industry] ??= new Set<string>()).add(x.subcategory);
@@ -180,11 +179,13 @@ export function buildFacets(fieldsList: FilterableFields[]) {
   });
 
   return {
+    industries: Array.from(industries).sort(),
     capabilities: Array.from(tags).sort(),
     locations: Array.from(locations).sort(),
     opportunityTypes: Array.from(opportunities).sort(),
     capacities: Array.from(capacities),
     leadTimes: Array.from(leadTimes),
+    availabilities: Array.from(availabilities).sort(),
     certifications: Array.from(certifications).sort(),
     subcategoriesByIndustry,
   };
@@ -242,6 +243,105 @@ export interface ListingFiltersProps {
   resultLabel?: string;
 }
 
+function SearchInput({
+  value,
+  onChange,
+  placeholder,
+  className = "",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  className?: string;
+}) {
+  return (
+    <div className={`relative flex-1 min-w-0 ${className}`}>
+      <svg
+        className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      />
+    </div>
+  );
+}
+
+function FilterDropdowns({
+  filters,
+  onChange,
+  industryOpts,
+  subcategoryOpts,
+  capabilityOpts,
+  locationOpts,
+  opportunityOpts,
+  options,
+  hasCapacity,
+  hasLeadTime,
+  hasAvailability,
+  hasCertification,
+  layout = "row",
+}: {
+  filters: ListingFilterState;
+  onChange: (patch: Partial<ListingFilterState>) => void;
+  industryOpts: SelectOption[];
+  subcategoryOpts: SelectOption[];
+  capabilityOpts: SelectOption[];
+  locationOpts: SelectOption[];
+  opportunityOpts: SelectOption[];
+  options: ListingFiltersOptions;
+  hasCapacity: boolean;
+  hasLeadTime: boolean;
+  hasAvailability: boolean;
+  hasCertification: boolean;
+  layout?: "row" | "stack";
+}) {
+  const wrapCls = layout === "stack" ? "flex flex-col gap-3" : "flex items-center gap-2 flex-wrap";
+  const fieldCls = layout === "stack" ? "w-full" : "";
+
+  return (
+    <div className={wrapCls}>
+      <FilterSelect className={fieldCls} value={filters.industry} onChange={(v) => onChange({ industry: v })} options={industryOpts} />
+      <FilterSelect className={fieldCls} value={filters.subcategory} onChange={(v) => onChange({ subcategory: v })} options={subcategoryOpts} />
+      <FilterSelect className={fieldCls} value={filters.capability} onChange={(v) => onChange({ capability: v })} options={capabilityOpts} />
+      <FilterSelect className={fieldCls} value={filters.location} onChange={(v) => onChange({ location: v })} options={locationOpts} />
+      <FilterSelect className={fieldCls} value={filters.opportunityType} onChange={(v) => onChange({ opportunityType: v })} options={opportunityOpts} />
+      {hasCapacity && (
+        <label className={layout === "stack" ? "flex flex-col gap-1 text-xs text-gray-500" : "flex items-center gap-1.5 text-xs text-gray-500"}>
+          Capacity
+          <FilterSelect className={fieldCls} value={filters.capacity} onChange={(v) => onChange({ capacity: v })} options={toOpts([ANY_CAPACITY, ...(options.capacities ?? [])])} />
+        </label>
+      )}
+      {hasLeadTime && (
+        <label className={layout === "stack" ? "flex flex-col gap-1 text-xs text-gray-500" : "flex items-center gap-1.5 text-xs text-gray-500"}>
+          Lead Time
+          <FilterSelect className={fieldCls} value={filters.leadTime} onChange={(v) => onChange({ leadTime: v })} options={toOpts([ANY_LEAD_TIME, ...(options.leadTimes ?? [])])} />
+        </label>
+      )}
+      {hasAvailability && (
+        <label className={layout === "stack" ? "flex flex-col gap-1 text-xs text-gray-500" : "flex items-center gap-1.5 text-xs text-gray-500"}>
+          Availability
+          <FilterSelect className={fieldCls} value={filters.availability} onChange={(v) => onChange({ availability: v })} options={[{ value: ANY_AVAILABILITY, label: ANY_AVAILABILITY }, ...(options.availabilities ?? [])]} />
+        </label>
+      )}
+      {hasCertification && (
+        <label className={layout === "stack" ? "flex flex-col gap-1 text-xs text-gray-500" : "flex items-center gap-1.5 text-xs text-gray-500"}>
+          Certification
+          <FilterSelect className={fieldCls} value={filters.certification} onChange={(v) => onChange({ certification: v })} options={toOpts([ANY_CERTIFICATION, ...(options.certifications ?? [])])} />
+        </label>
+      )}
+    </div>
+  );
+}
+
 export default function ListingFilters({
   filters,
   onChange,
@@ -252,19 +352,17 @@ export default function ListingFilters({
   resultLabel,
 }: ListingFiltersProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  const industryOpts = toOpts(options.industries ?? allIndustries);
+  const industryOpts = toOpts([ALL_INDUSTRIES, ...(options.industries ?? [])]);
   const subcategoryValues =
     filters.industry !== ALL_INDUSTRIES
-      ? options.subcategoriesByIndustry?.[filters.industry] ?? industryMap[filters.industry] ?? []
+      ? options.subcategoriesByIndustry?.[filters.industry] ?? []
       : [];
   const subcategoryOpts = toOpts([ALL_SUBCATEGORIES, ...subcategoryValues]);
   const capabilityOpts = toOpts([ALL_CAPABILITIES, ...(options.capabilities ?? [])]);
   const locationOpts = toOpts([ALL_LOCATIONS, ...(options.locations ?? [])]);
-  const opportunityOpts = toOpts([
-    ALL_OPPORTUNITIES,
-    ...(options.opportunityTypes ?? allOpportunityTypes),
-  ]);
+  const opportunityOpts = toOpts([ALL_OPPORTUNITIES, ...(options.opportunityTypes ?? [])]);
 
   const hasCapacity = (options.capacities?.length ?? 0) > 0;
   const hasLeadTime = (options.leadTimes?.length ?? 0) > 0;
@@ -272,35 +370,65 @@ export default function ListingFilters({
   const hasCertification = (options.certifications?.length ?? 0) > 0;
   const hasAdvanced = hasCapacity || hasLeadTime || hasAvailability || hasCertification;
 
+  useEffect(() => {
+    document.body.style.overflow = mobileDrawerOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileDrawerOpen]);
+
+  const dropdownProps = {
+    filters,
+    onChange,
+    industryOpts,
+    subcategoryOpts,
+    capabilityOpts,
+    locationOpts,
+    opportunityOpts,
+    options,
+    hasCapacity,
+    hasLeadTime,
+    hasAvailability,
+    hasCertification,
+  };
+
   return (
-    <div className="mb-3">
-      {/* Main filter row */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <svg
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    <div className="mb-3 min-w-0">
+      {/* Mobile: search + Filters button */}
+      <div className="lg:hidden flex items-center gap-2">
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => onChange({ search: v })}
+          placeholder={searchPlaceholder}
+        />
+        <button
+          type="button"
+          onClick={() => setMobileDrawerOpen(true)}
+          className={`relative shrink-0 flex items-center gap-1.5 py-2 px-3 text-sm border rounded-lg transition-colors whitespace-nowrap ${
+            hasActiveFilters
+              ? "border-blue-300 bg-blue-50 text-blue-700"
+              : "border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+          }`}
+        >
+          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
           </svg>
-          <input
-            type="text"
-            value={filters.search}
-            onChange={(e) => onChange({ search: e.target.value })}
-            placeholder={searchPlaceholder}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
+          Filters
+          {hasActiveFilters && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-blue-600" aria-hidden="true" />
+          )}
+        </button>
+      </div>
 
-        <FilterSelect value={filters.industry} onChange={(v) => onChange({ industry: v })} options={industryOpts} />
-        <FilterSelect value={filters.subcategory} onChange={(v) => onChange({ subcategory: v })} options={subcategoryOpts} />
-        <FilterSelect value={filters.capability} onChange={(v) => onChange({ capability: v })} options={capabilityOpts} />
-        <FilterSelect value={filters.location} onChange={(v) => onChange({ location: v })} options={locationOpts} />
-        <FilterSelect value={filters.opportunityType} onChange={(v) => onChange({ opportunityType: v })} options={opportunityOpts} />
-
+      {/* Desktop: unchanged filter row */}
+      <div className="hidden lg:flex items-center gap-2 flex-wrap">
+        <SearchInput
+          value={filters.search}
+          onChange={(v) => onChange({ search: v })}
+          placeholder={searchPlaceholder}
+          className="min-w-[200px]"
+        />
+        <FilterDropdowns {...dropdownProps} layout="row" hasCapacity={false} hasLeadTime={false} hasAvailability={false} hasCertification={false} />
         {hasAdvanced && (
           <button
             type="button"
@@ -322,9 +450,9 @@ export default function ListingFilters({
         )}
       </div>
 
-      {/* Advanced filter row */}
+      {/* Desktop advanced filter row */}
       {hasAdvanced && showAdvanced && (
-        <div className="flex items-center gap-2 flex-wrap mt-2 p-2.5 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="hidden lg:flex items-center gap-2 flex-wrap mt-2 p-2.5 bg-gray-50 border border-gray-200 rounded-lg">
           {hasCapacity && (
             <label className="flex items-center gap-1.5 text-xs text-gray-500">
               Capacity
@@ -352,10 +480,77 @@ export default function ListingFilters({
         </div>
       )}
 
+      {/* Mobile filter drawer */}
+      {mobileDrawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-[90]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label="Close filters"
+            onClick={() => setMobileDrawerOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[88vh] bg-white rounded-t-2xl shadow-xl flex flex-col">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
+              <h2 className="text-sm font-semibold text-gray-900">Filters</h2>
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="p-1.5 rounded text-gray-500 hover:bg-gray-100"
+                aria-label="Close filters"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <FilterDropdowns {...dropdownProps} layout="stack" hasCapacity={hasCapacity} hasLeadTime={hasLeadTime} hasAvailability={hasAvailability} hasCertification={hasCertification} />
+              {options.sortOptions && options.sortOptions.length > 0 && (
+                <label className="flex flex-col gap-1 text-xs text-gray-500 mt-4">
+                  Sort by
+                  <select
+                    value={filters.sort}
+                    onChange={(e) => onChange({ sort: e.target.value })}
+                    className={`${selectCls} w-full`}
+                  >
+                    {options.sortOptions.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+            <div className="border-t border-gray-200 px-4 py-3 flex gap-2 shrink-0">
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onReset();
+                    setMobileDrawerOpen(false);
+                  }}
+                  className="flex-1 py-2.5 text-sm border border-gray-300 rounded-lg text-gray-700"
+                >
+                  Clear all
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(false)}
+                className="flex-1 py-2.5 text-sm font-medium text-white bg-blue-700 rounded-lg"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Meta row: result count + clear + sort */}
-      <div className="flex items-center justify-between gap-2 mt-2">
-        <div className="text-xs text-gray-400">{resultLabel}</div>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 min-w-0">
+        <div className="text-xs text-gray-400 truncate">{resultLabel}</div>
+        <div className="hidden lg:flex items-center gap-2 shrink-0">
           {hasActiveFilters && (
             <button type="button" onClick={onReset} className="text-xs text-blue-700 hover:underline whitespace-nowrap">
               Clear filters

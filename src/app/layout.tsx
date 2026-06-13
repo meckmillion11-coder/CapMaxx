@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-white text-gray-900 antialiased">
         <Nav />
-        <main>{children}</main>
+        <main className="overflow-x-hidden min-w-0">{children}</main>
         <Footer />
       </body>
     </html>

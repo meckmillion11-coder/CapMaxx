@@ -12,6 +12,11 @@ export interface MyBusinessListing {
   subcategory: string;
   location: string;
   tags: string[];
+  opportunityTags?: string[];
+  certifications?: string[];
+  capacity?: string;
+  leadTime?: string;
+  availabilityStatus?: "available" | "expiring" | "expired";
   views: number;
   connections: number;
   messages: number;

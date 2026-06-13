@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { markAllNotificationsRead } from "@/lib/db/notifications";
+import { fetchMyNotifications, type NotificationItem } from "@/lib/db/reads";
 
 // Returns false during SSR and the first client render, then true once the app
 // has hydrated. Using useSyncExternalStore (instead of a setState-in-effect
@@ -19,21 +20,12 @@ function useHydrated() {
 
 type ActivityType = "view" | "message" | "saved" | "expiring" | "connection";
 
-type Activity = {
-  id: string;
-  type: ActivityType;
-  text: string;
-  time: string;
-  unread: boolean;
-};
-
-const initialActivity: Activity[] = [
-  { id: "1", type: "view", text: "BlueLine Transport viewed your listing", time: "5m ago", unread: true },
-  { id: "2", type: "message", text: "Summit Cold Storage sent a message", time: "1h ago", unread: true },
-  { id: "3", type: "saved", text: "3 companies saved your listing", time: "3h ago", unread: true },
-  { id: "4", type: "expiring", text: "Listing expires in 14 days", time: "1d ago", unread: false },
-  { id: "5", type: "connection", text: "New connection request from GreenLeaf Bakery", time: "2d ago", unread: false },
-];
+function asActivityType(value: string): ActivityType {
+  if (value === "message" || value === "saved" || value === "expiring" || value === "connection") {
+    return value;
+  }
+  return "view";
+}
 
 function ActivityIcon({ type }: { type: ActivityType }) {
   const base = "w-4 h-4";
@@ -83,7 +75,7 @@ const iconColor: Record<ActivityType, string> = {
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState(initialActivity);
+  const [items, setItems] = useState<NotificationItem[]>([]);
   const ref = useRef<HTMLDivElement>(null);
 
   // The dropdown panel is client-only interactive UI; gating it behind the
@@ -93,6 +85,16 @@ export default function NotificationBell() {
   const hydrated = useHydrated();
 
   const unreadCount = items.filter((i) => i.unread).length;
+
+  useEffect(() => {
+    let active = true;
+    void fetchMyNotifications().then((data) => {
+      if (active && data) setItems(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -133,10 +135,15 @@ export default function NotificationBell() {
           </div>
 
           <div className="max-h-80 overflow-y-auto">
-            {items.map((item) => (
+            {items.length === 0 ? (
+              <p className="px-4 py-8 text-center text-xs text-gray-400">No notifications yet.</p>
+            ) : (
+              items.map((item) => {
+                const type = asActivityType(item.type);
+                return (
               <div key={item.id} className="flex items-start gap-3 px-4 py-2.5 border-b border-gray-50 last:border-b-0 hover:bg-gray-50">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${iconColor[item.type]}`}>
-                  <ActivityIcon type={item.type} />
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${iconColor[type]}`}>
+                  <ActivityIcon type={type} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className={`text-[13px] leading-snug ${item.unread ? "text-gray-900 font-medium" : "text-gray-600"}`}>{item.text}</p>
@@ -144,7 +151,9 @@ export default function NotificationBell() {
                 </div>
                 {item.unread && <span className="mt-1.5 w-2 h-2 rounded-full bg-blue-600 shrink-0" />}
               </div>
-            ))}
+                );
+              })
+            )}
           </div>
 
           <div className="flex items-center justify-between px-4 py-2 border-t border-gray-100 bg-gray-50">
