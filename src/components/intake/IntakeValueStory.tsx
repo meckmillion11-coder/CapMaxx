@@ -145,11 +145,11 @@ export default function IntakeValueStory({ variant = "full" }: { variant?: Varia
           <p className="text-[13px] text-gray-600 leading-relaxed">{CAPMAXX_SITUATIONS_INTRO}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 gap-4 lg:gap-5 items-stretch">
           {CAPMAXX_SITUATIONS.map((situation, i) => (
             <article
               key={situation.title}
-              className="relative flex flex-col h-full bg-white border border-gray-200 rounded-xl p-4 sm:p-5 hover:border-slate-300 hover:shadow-sm transition-all animate-fade-in-up overflow-hidden"
+              className="relative flex flex-col h-full min-h-[220px] lg:min-h-0 bg-white border border-gray-200 rounded-xl p-4 sm:p-5 hover:border-slate-300 hover:shadow-sm transition-all animate-fade-in-up overflow-hidden"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div className="absolute top-3 right-3 opacity-80 pointer-events-none" aria-hidden="true">

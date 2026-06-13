@@ -201,7 +201,7 @@ export default function EarlyAccessIntakeForm({ headline }: { headline?: string 
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 min-w-0">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 min-w-0">
       <div className="mb-4">
         <span className="inline-block text-[11px] font-semibold uppercase tracking-wide text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-0.5 mb-2">
           Early Access · Founding Companies
