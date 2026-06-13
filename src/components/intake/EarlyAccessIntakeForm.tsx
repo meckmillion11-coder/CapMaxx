@@ -83,6 +83,7 @@ export default function EarlyAccessIntakeForm({ headline }: { headline?: string 
   const [industriesServedText, setIndustriesServedText] = useState("");
   const logoRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -165,6 +166,13 @@ export default function EarlyAccessIntakeForm({ headline }: { headline?: string 
     setBusy(false);
   };
 
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const submitBtnCls =
+    "px-8 py-2.5 text-[13px] font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-lg disabled:opacity-60 transition-colors";
+
   if (submitted) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4 py-12">
@@ -202,21 +210,30 @@ export default function EarlyAccessIntakeForm({ headline }: { headline?: string 
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 min-w-0">
-      <div className="mb-4">
-        <span className="inline-block text-[11px] font-semibold uppercase tracking-wide text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-0.5 mb-2">
-          Early Access · Founding Companies
-        </span>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-          {headline ?? "Join CapMaxx Before Public Launch"}
-        </h1>
-        <p className="text-[13px] text-gray-500 mt-1 max-w-2xl">
-          Apply below to showcase your manufacturing, warehousing, logistics, equipment, labor, or services — and stop letting valuable resources sit underutilized.
-        </p>
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="min-w-0">
+          <span className="inline-block text-[11px] font-semibold uppercase tracking-wide text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-0.5 mb-2">
+            Early Access · Founding Companies
+          </span>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            {headline ?? "Join CapMaxx Before Public Launch"}
+          </h1>
+          <p className="text-[13px] text-gray-500 mt-1 max-w-2xl">
+            Apply below to showcase your manufacturing, warehousing, logistics, equipment, labor, or services — and stop letting valuable resources sit underutilized.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={scrollToForm}
+          className={`${submitBtnCls} w-full sm:w-auto shrink-0 sm:mt-7`}
+        >
+          Join Early Access
+        </button>
       </div>
 
       <IntakeValueStory />
 
-      <div className="border-t border-gray-200 pt-6">
+      <div ref={formRef} id="intake-form" className="border-t border-gray-200 pt-6 scroll-mt-20">
         <h2 className="text-sm font-semibold text-gray-900 mb-4 text-center sm:text-left">
           Tell us about your company
         </h2>
