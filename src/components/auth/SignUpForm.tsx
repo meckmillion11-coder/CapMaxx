@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { signUp } from "@/lib/db/auth";
+import { isPreLaunchMode } from "@/lib/preLaunch";
+import IntakeValueStory from "@/components/intake/IntakeValueStory";
 
 // Sign-up form. Wired to Supabase auth + user/company provisioning via signUp().
 // Navigation only happens on a real successful sign-up (when Supabase is
@@ -37,11 +39,18 @@ export default function SignUpForm() {
     setError(res.error ?? "Unable to create account.");
   }
 
+  const preLaunch = isPreLaunchMode();
+
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-16 bg-gray-50">
+    <div className="min-h-[80vh] flex flex-col items-center justify-center px-4 py-10 sm:py-16 bg-gray-50 gap-6">
+      {preLaunch && (
+        <div className="w-full max-w-md animate-fade-in">
+          <IntakeValueStory variant="compact" />
+        </div>
+      )}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-bold text-blue-700 tracking-tight">
+          <Link href={preLaunch ? "/intake" : "/"} className="text-2xl font-bold text-blue-700 tracking-tight">
             Cap<span className="text-gray-900">Maxx</span>
           </Link>
           <h1 className="text-xl font-bold text-gray-900 mt-4 mb-1">Create your account</h1>

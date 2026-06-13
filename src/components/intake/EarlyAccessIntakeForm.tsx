@@ -12,6 +12,7 @@ import {
 } from "@/lib/intakeFormConfig";
 import { addSubmission, type NewSubmissionInput } from "@/lib/intakeSubmissions";
 import IntakePreviewCards from "./IntakePreviewCards";
+import IntakeValueStory from "./IntakeValueStory";
 
 const inputCls =
   "w-full px-2.5 py-1.5 text-[13px] border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500";
@@ -174,9 +175,12 @@ export default function EarlyAccessIntakeForm({ headline }: { headline?: string 
             </svg>
           </div>
           <h2 className="text-lg font-bold text-gray-900 mb-1.5">You&apos;re on the list!</h2>
-          <p className="text-[13px] text-gray-500 mb-6">
+          <p className="text-[13px] text-gray-500 mb-4">
             Thank you for joining CapMaxx Early Access. We&apos;ll review your information and contact you before the public launch.
           </p>
+          <div className="text-left mb-6">
+            <IntakeValueStory variant="compact" />
+          </div>
           <button
             type="button"
             onClick={() => {
@@ -197,8 +201,8 @@ export default function EarlyAccessIntakeForm({ headline }: { headline?: string 
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6 min-w-0">
-      <div className="mb-6">
+    <div className="max-w-5xl mx-auto px-4 py-6 min-w-0">
+      <div className="mb-4">
         <span className="inline-block text-[11px] font-semibold uppercase tracking-wide text-blue-700 bg-blue-50 border border-blue-100 rounded px-2 py-0.5 mb-2">
           Early Access · Founding Companies
         </span>
@@ -206,8 +210,16 @@ export default function EarlyAccessIntakeForm({ headline }: { headline?: string 
           {headline ?? "Join CapMaxx Before Public Launch"}
         </h1>
         <p className="text-[13px] text-gray-500 mt-1 max-w-2xl">
-          Tell us about your company, resources, and opportunities. CapMaxx is in pre-launch — we&apos;re building our founding network of manufacturers, warehouses, logistics providers, and service businesses.
+          Apply below to showcase your manufacturing, warehousing, logistics, equipment, labor, or services — and stop letting valuable resources sit underutilized.
         </p>
+      </div>
+
+      <IntakeValueStory />
+
+      <div className="border-t border-gray-200 pt-6">
+        <h2 className="text-sm font-semibold text-gray-900 mb-4 text-center sm:text-left">
+          Tell us about your company
+        </h2>
       </div>
 
       <div className="space-y-4">

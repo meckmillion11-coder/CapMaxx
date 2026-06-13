@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { isPreLaunchMode } from "@/lib/preLaunch";
+import { CAPMAXX_MISSION, CAPMAXX_TAGLINE } from "@/lib/intakeValueContent";
 
 const footerLinks = [
   { label: "About", href: "/about" },
@@ -39,7 +40,7 @@ export default function Footer() {
             </Link>
             <p className="text-[11px] lg:text-xs text-gray-500 leading-relaxed hidden sm:block">
               {preLaunch
-                ? "CapMaxx is in early access. Founding companies can submit manufacturing, warehousing, logistics, equipment, labor, and service capabilities before public launch."
+                ? `${CAPMAXX_MISSION} ${CAPMAXX_TAGLINE}`
                 : "CapMaxx helps businesses turn underutilized resources into revenue by showcasing available capacity, equipment, warehouse space, transportation resources, labor, services, and business capabilities."}
             </p>
           </div>
